@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import random
 from IPython import display
 
 # Implemented methods
@@ -43,6 +44,7 @@ class Maze:
     STEP_REWARD = -1
     GOAL_REWARD = 0
     IMPOSSIBLE_REWARD = -100
+    EATED_REWARD = -100
 
     # Minotaur action
     MINOTAUR_CAN_STAY = False
@@ -127,7 +129,7 @@ class Maze:
 
     def __possible_moves(self, state, action):
         states = []
-        for min_action in minotaur_actions:
+        for min_action in self.minotaur_actions:
             new_state = self.__move(state, action)
             if new_state:
                 states.append(new_state)
@@ -161,27 +163,23 @@ class Maze:
         if weights is None:
             for s in range(self.n_states):
                 for a in range(self.n_actions):
-                    next_s = self.__move(s,a);
-                    # Rewrd for hitting a wall
-                    if s == next_s and a != self.STAY:
-                        rewards[s,a] = self.IMPOSSIBLE_REWARD;
-                    # Reward for reaching the exit
-                    elif s == next_s and self.maze[self.states[next_s]] == 2:
-                        rewards[s,a] = self.GOAL_REWARD;
-                    # Reward for taking a step to an empty cell that is not the exit
-                    else:
-                        rewards[s,a] = self.STEP_REWARD;
+                    next_states = __possible_moves(s, a);
 
-                    # If there exists trapped cells with probability 0.5
-                    if random_rewards and self.maze[self.states[next_s]]<0:
-                        row, col = self.states[next_s];
-                        # With probability 0.5 the reward is
-                        r1 = (1 + abs(self.maze[row, col])) * rewards[s,a];
-                        # With probability 0.5 the reward is
-                        r2 = rewards[s,a];
-                        # The average reward
-                        rewards[s,a] = 0.5*r1 + 0.5*r2;
-        # If the weights are descrobed by a weight matrix
+                    for next_s in next_states:
+                        # Reward for hitting a wall
+                        if s == next_s and a != self.STAY:
+                            rewards[s,a] = self.IMPOSSIBLE_REWARD;
+                        # Reward for being eated by the minotaur
+                        elif next_s.player_pos == next_s.min_pos:
+                            rewards[s,a] = self.EATED_REWARD
+                        # Reward for reaching the exit
+                        elif self.maze[self.states[next_s]] == 2:
+                            rewards[s,a] = self.GOAL_REWARD;
+                        # Reward for taking a step to an empty cell that is not the exit
+                        else:
+                            rewards[s,a] = self.STEP_REWARD;
+
+        # If the weights are described by a weight matrix
         else:
             for s in range(self.n_states):
                  for a in range(self.n_actions):
@@ -208,7 +206,7 @@ class Maze:
             path.append(start);
             while t < horizon-1:
                 # Move to next state given the policy and the current state
-                next_s = self.__move(s,policy[s,t]);
+                next_s = random.choice(self.__possible_moves(s,policy[s,t]));
                 # Add the position in the maze corresponding to the next state
                 # to the path
                 path.append(self.states[next_s])
