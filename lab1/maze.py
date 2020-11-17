@@ -37,6 +37,9 @@ class Maze:
     GOAL_REWARD = 0
     IMPOSSIBLE_REWARD = -100
 
+    # Minotaur action
+    MINOTAUR_CAN_STAY = False
+
 
     def __init__(self, maze, weights=None, random_rewards=False):
         """ Constructor of the environment Maze.
@@ -58,6 +61,17 @@ class Maze:
         actions[self.MOVE_UP]    = (-1,0);
         actions[self.MOVE_DOWN]  = (1,0);
         return actions;
+    
+    def __minotaur_actions(self):
+        minotaur_actions = dict();
+        if MINOTAUR_CAN_STAY :
+            minotaur_actions[self.STAY] = (0, 0);
+
+        minotaur_actions[self.MOVE_LEFT]  = (0,-1);
+        minotaur_actions[self.MOVE_RIGHT] = (0, 1);
+        minotaur_actions[self.MOVE_UP]    = (-1,0);
+        minotaur_actions[self.MOVE_DOWN]  = (1,0);
+        return minotaur_actions;
 
     def __states(self):
         states = dict();
