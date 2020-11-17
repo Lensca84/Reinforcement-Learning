@@ -190,7 +190,7 @@ class Maze:
 
         return rewards;
 
-    def simulate(self, start, policy, method):
+    def simulate(self, start, start_min, policy, method):
         if method not in methods:
             error = 'ERROR: the argument method must be in {}'.format(methods);
             raise NameError(error);
@@ -201,9 +201,9 @@ class Maze:
             horizon = policy.shape[1];
             # Initialize current state and time
             t = 0;
-            s = self.map[start];
+            s = self.map[State(start, start_min)];
             # Add the starting position in the maze to the path
-            path.append(start);
+            path.append(State(start, start_min));
             while t < horizon-1:
                 # Move to next state given the policy and the current state
                 next_s = random.choice(self.__possible_moves(s,policy[s,t]));
