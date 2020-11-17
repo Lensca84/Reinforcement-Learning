@@ -23,7 +23,12 @@ class State:
     def __init__(self, player_pos, min_pos):
         self.player_pos = player_pos
         self.min_pos = min_pos
+    
+    def __hash__(self):
+        return hash((self.player_pos, self.min_pos))
 
+    def __eq__(self, other_state):
+        return self.player_pos == other_state.player_pos and self.min_pos == other_state.min_pos
 
 class Maze:
 
@@ -50,7 +55,7 @@ class Maze:
     EATED_REWARD = -100
 
     # Minotaur action
-    MINOTAUR_CAN_STAY = False
+    MINOTAUR_CAN_STAY = False;
 
 
     def __init__(self, maze, weights=None, random_rewards=False):
@@ -76,7 +81,7 @@ class Maze:
 
     def __minotaur_actions(self):
         minotaur_actions = dict();
-        if MINOTAUR_CAN_STAY :
+        if self.MINOTAUR_CAN_STAY:
             minotaur_actions[self.STAY] = (0, 0);
 
         minotaur_actions[self.MOVE_LEFT]  = (0,-1);
@@ -128,13 +133,14 @@ class Maze:
         if hitting_maze_walls:
             return state;
         else:
-            return self.map[State((row, col), (row_min,col_min))];
+            new_state = State((row, col), (row_min,col_min))
+            return self.map[new_state];
 
     def __possible_moves(self, state, action):
         states = []
-        for min_action in self.minotaur_actions:
-            new_state = self.__move(state, action)
-            if new_state:
+        for min_action in self.__minotaur_actions():
+            new_state = self.__move(state, action, min_action)
+            if new_state != None:
                 states.append(new_state)
         return states
 
@@ -166,17 +172,17 @@ class Maze:
         if weights is None:
             for s in range(self.n_states):
                 for a in range(self.n_actions):
-                    next_states = __possible_moves(s, a);
+                    next_states = self.__possible_moves(s, a);
 
                     for next_s in next_states:
                         # Reward for hitting a wall
                         if s == next_s and a != self.STAY:
                             rewards[s,a] = self.IMPOSSIBLE_REWARD;
                         # Reward for being eated by the minotaur
-                        elif next_s.player_pos == next_s.min_pos:
+                        elif self.states[next_s].player_pos == self.states[next_s].min_pos:
                             rewards[s,a] = self.EATED_REWARD
                         # Reward for reaching the exit
-                        elif self.maze[self.states[next_s]] == 2:
+                        elif self.maze[self.states[next_s].player_pos] == 2:
                             rewards[s,a] = self.GOAL_REWARD;
                         # Reward for taking a step to an empty cell that is not the exit
                         else:
@@ -426,11 +432,11 @@ def animate_solution(maze, path):
         grid.get_celld()[(path[i].min_pos)].get_text().set_text('Minotaur') 
         if i > 0:
             if path[i].player_pos == path[i].min_pos:
-                grid.get_celld()[(path[i])].set_facecolor(RED)
-                grid.get_celld()[(path[i])].get_text().set_text('Player is eaten')
+                grid.get_celld()[(path[i].player_pos)].set_facecolor(RED)
+                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player is eaten')
             elif path[i].player_pos == (6, 5) :
-                grid.get_celld()[(path[i])].set_facecolor(LIGHT_GREEN)
-                grid.get_celld()[(path[i])].get_text().set_text('Player is out')
+                grid.get_celld()[(path[i].player_pos)].set_facecolor(LIGHT_GREEN)
+                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player is out')
             else:
                 grid.get_celld()[(path[i-1].player_pos)].set_facecolor(col_map[maze[path[i-1].player_pos]])
                 grid.get_celld()[(path[i-1].player_pos)].get_text().set_text('')

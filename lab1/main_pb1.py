@@ -1,3 +1,7 @@
+import maze as mz
+import numpy as np
+import matplotlib.pyplot as plt
+
 # Description of the maze as a numpy array
 maze = np.array([
     [0, 0, 1, 0, 0, 0, 0, 0],
