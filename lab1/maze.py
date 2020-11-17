@@ -14,6 +14,9 @@ BLACK        = '#000000';
 WHITE        = '#FFFFFF';
 LIGHT_PURPLE = '#E8D0FF';
 LIGHT_ORANGE = '#FAE0C3';
+BLUE         = '#0000FF';
+RED          = '#FF0000';
+CHOCOLATE    = '#D2691E';
 
 class State:
 
@@ -354,7 +357,7 @@ def value_iteration(env, gamma, epsilon):
 def draw_maze(maze):
 
     # Map a color to each cell in the maze
-    col_map = {0: WHITE, 1: BLACK, 2: LIGHT_GREEN, -6: LIGHT_RED, -1: LIGHT_RED};
+    col_map = {0: WHITE, 1: BLACK, 2: LIGHT_GREEN};
 
     # Give a color to each cell
     rows,cols    = maze.shape;
@@ -368,13 +371,6 @@ def draw_maze(maze):
     ax.set_title('The Maze');
     ax.set_xticks([]);
     ax.set_yticks([]);
-
-    # Give a color to each cell
-    rows,cols    = maze.shape;
-    colored_maze = [[col_map[maze[j,i]] for i in range(cols)] for j in range(rows)];
-
-    # Create figure of the size of the maze
-    fig = plt.figure(1, figsize=(cols,rows))
 
     # Create a table to color
     grid = plt.table(cellText=None,
@@ -391,7 +387,7 @@ def draw_maze(maze):
 def animate_solution(maze, path):
 
     # Map a color to each cell in the maze
-    col_map = {0: WHITE, 1: BLACK, 2: LIGHT_GREEN, -6: LIGHT_RED, -1: LIGHT_RED};
+    col_map = {0: WHITE, 1: BLACK, 2: LIGHT_GREEN};
 
     # Size of the maze
     rows,cols = maze.shape;
@@ -407,9 +403,6 @@ def animate_solution(maze, path):
 
     # Give a color to each cell
     colored_maze = [[col_map[maze[j,i]] for i in range(cols)] for j in range(rows)];
-
-    # Create figure of the size of the maze
-    fig = plt.figure(1, figsize=(cols,rows))
 
     # Create a table to color
     grid = plt.table(cellText=None,
@@ -427,15 +420,22 @@ def animate_solution(maze, path):
 
     # Update the color at each frame
     for i in range(len(path)):
-        grid.get_celld()[(path[i])].set_facecolor(LIGHT_ORANGE)
-        grid.get_celld()[(path[i])].get_text().set_text('Player')
+        grid.get_celld()[(path[i].player_pos)].set_facecolor(BLUE) 
+        grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player') 
+        grid.get_celld()[(path[i].min_pos)].set_facecolor(CHOCOLATE) 
+        grid.get_celld()[(path[i].min_pos)].get_text().set_text('Minotaur') 
         if i > 0:
-            if path[i] == path[i-1]:
+            if path[i].player_pos == path[i].min_pos:
+                grid.get_celld()[(path[i])].set_facecolor(RED)
+                grid.get_celld()[(path[i])].get_text().set_text('Player is eaten')
+            elif path[i].player_pos == (6, 5) :
                 grid.get_celld()[(path[i])].set_facecolor(LIGHT_GREEN)
                 grid.get_celld()[(path[i])].get_text().set_text('Player is out')
             else:
-                grid.get_celld()[(path[i-1])].set_facecolor(col_map[maze[path[i-1]]])
-                grid.get_celld()[(path[i-1])].get_text().set_text('')
+                grid.get_celld()[(path[i-1].player_pos)].set_facecolor(col_map[maze[path[i-1].player_pos]])
+                grid.get_celld()[(path[i-1].player_pos)].get_text().set_text('')
+                grid.get_celld()[(path[i-1].min_pos)].set_facecolor(col_map[maze[path[i-1].min_pos]])
+                grid.get_celld()[(path[i-1].min_pos)].get_text().set_text('')
         display.display(fig)
         display.clear_output(wait=True)
         time.sleep(1)
