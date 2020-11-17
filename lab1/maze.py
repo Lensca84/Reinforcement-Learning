@@ -14,6 +14,13 @@ WHITE        = '#FFFFFF';
 LIGHT_PURPLE = '#E8D0FF';
 LIGHT_ORANGE = '#FAE0C3';
 
+class State:
+
+    def __init__(self, player_pos, min_pos):
+        self.player_pos = player_pos
+        self.min_pos = min_pos
+
+
 class Maze:
 
     # Actions
@@ -61,7 +68,7 @@ class Maze:
         actions[self.MOVE_UP]    = (-1,0);
         actions[self.MOVE_DOWN]  = (1,0);
         return actions;
-    
+
     def __minotaur_actions(self):
         minotaur_actions = dict();
         if MINOTAUR_CAN_STAY :
@@ -76,34 +83,56 @@ class Maze:
     def __states(self):
         states = dict();
         map = dict();
-        end = False;
         s = 0;
-        for i in range(self.maze.shape[0]):
-            for j in range(self.maze.shape[1]):
-                if self.maze[i,j] != 1:
-                    states[s] = (i,j);
-                    map[(i,j)] = s;
-                    s += 1;
+        #Minotaur possible states
+        for i1 in range(self.maze.shape[0]):
+            for j1 in range(self.maze.shape[1]):
+                #Player possible states
+                for i in range(self.maze.shape[0]):
+                    for j in range(self.maze.shape[1]):
+                        if self.maze[i,j] != 1:
+                            new_state = State((i,j),(i1,j1))
+                            states[s] = new_state
+                            map[new_state] = s
+                            s += 1
         return states, map
 
-    def __move(self, state, action):
+    def __move(self, state, action_player, action_min):
         """ Makes a step in the maze, given a current position and an action.
             If the action STAY or an inadmissible action is used, the agent stays in place.
 
             :return tuple next_cell: Position (x,y) on the maze that agent transitions to.
         """
         # Compute the future position given current (state, action)
-        row = self.states[state][0] + self.actions[action][0];
-        col = self.states[state][1] + self.actions[action][1];
+        row = self.states[state].player_pos[0] + self.actions[action_player][0];
+        col = self.states[state].player_pos[1] + self.actions[action_player][1];
+
+        row_min = self.states[state].min_pos[0] + self.actions[action_min][0];
+        col_min = self.states[state].min_pos[1] + self.actions[action_min][1];
         # Is the future position an impossible one ?
         hitting_maze_walls =  (row == -1) or (row == self.maze.shape[0]) or \
                               (col == -1) or (col == self.maze.shape[1]) or \
                               (self.maze[row,col] == 1);
+
+        min_hiting_border = (row_min == -1) or (row_min == self.maze.shape[0]) or \
+                            (col_min == -1) or (col_min == self.maze.shape[1])
+        if min_hiting_border:
+            return None
+
         # Based on the impossiblity check return the next state.
         if hitting_maze_walls:
             return state;
         else:
-            return self.map[(row, col)];
+            return self.map[State((row, col), (row_min,col_min))];
+
+    def __possible_moves(self, state, action):
+        states = []
+        for min_action in minotaur_actions:
+            new_state = self.__move(state, action)
+            if new_state:
+                states.append(new_state)
+        return states
+
 
     def __transitions(self):
         """ Computes the transition probabilities for every state action pair.
@@ -118,8 +147,10 @@ class Maze:
         # are deterministic.
         for s in range(self.n_states):
             for a in range(self.n_actions):
-                next_s = self.__move(s,a);
-                transition_probabilities[next_s, s, a] = 1;
+                next_states = self.__possible_moves(s,a);
+                p = 1 / len(next_states)
+                for next_s in next_states:
+                    transition_probabilities[next_s, s, a] = p;
         return transition_probabilities;
 
     def __rewards(self, weights=None, random_rewards=None):
