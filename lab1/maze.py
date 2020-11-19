@@ -68,16 +68,17 @@ class Maze:
         """ Constructor of the environment Maze.
         """
         self.maze                     = maze;
+        self.old = old
+        self.MINOTAUR_CAN_STAY = min_stay
+        self.avg_life = avg_life
         self.actions                  = self.__actions();
         self.states, self.map         = self.__states();
         self.n_actions                = len(self.actions);
         self.n_states                 = len(self.states);
         self.transition_probabilities = self.__transitions();
-        self.rewards                  = self.__rewards(weights=weights,
-                                                random_rewards=random_rewards);
-        self.MINOTAUR_CAN_STAY = min_stay
-        self.old = old
-        self.avg_life = avg_life
+        self.rewards                  = self.__rewards(weights=weights, random_rewards=random_rewards);
+
+
 
     def __actions(self):
         actions = dict();
@@ -202,9 +203,11 @@ class Maze:
                 for s in range(self.n_states):
                     for a in range(self.n_actions):
                         next_states = self.__possible_moves(s, a);
-                        next_s = self.__move(s,a);
+                        # Reward when too old
+                        if self.states[s].too_old:
+                            rewards[s,a] = self.TOO_OLD_REWARD;
                         # Reward for hitting a wall
-                        if s == next_s and a != self.STAY:
+                        elif s == next_states[0] and a != self.STAY:
                             rewards[s,a] = self.IMPOSSIBLE_REWARD;
                         # Reward when too old
                         elif self.states[s].too_old:
@@ -262,10 +265,10 @@ class Maze:
             s = self.map[State(start, start_min)];
             # Add the starting position in the maze to the path
             path.append(State(start, start_min));
-            while t < horizon-1 and not(self.states[s].player_pos == start_min):
+            while t < horizon-1 and not(self.states[s].player_pos == start_min) and s != 0:
                 # Move to next state given the policy and the current state
                 if self.old:
-                    if random.random < 1/self.avg_life:
+                    if random.random() < 1/self.avg_life:
                         next_s = 0
                     else:
                         next_s = random.choice(self.__possible_moves(s,policy[s,t]));
@@ -491,14 +494,14 @@ def animate_solution(maze, path):
             grid.get_celld()[(path[i-1].min_pos)].set_facecolor(col_map[maze[path[i-1].min_pos]])
             grid.get_celld()[(path[i-1].min_pos)].get_text().set_text('')
 
-        if maze.old:
-            if i > 0:
-                if path[i].too_old:
-                    grid.get_celld()[(path[i].player_pos)].set_facecolor(RED)
-                    grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player is too old')
-                    grid.get_celld()[(path[i].min_pos)].set_facecolor(CHOCOLATE)
-                    grid.get_celld()[(path[i].min_pos)].get_text().set_text('Minotaur')
-                    break
+
+        if i > 0:
+            if path[i].too_old:
+                grid.get_celld()[(path[i].player_pos)].set_facecolor(RED)
+                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player is too old')
+                grid.get_celld()[(path[i].min_pos)].set_facecolor(CHOCOLATE)
+                grid.get_celld()[(path[i].min_pos)].get_text().set_text('Minotaur')
+                break
 
         grid.get_celld()[(path[i].player_pos)].set_facecolor(BLUE)
         grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player')
@@ -520,5 +523,3 @@ def animate_solution(maze, path):
         time.sleep(1)
 
 # %%
-
-
