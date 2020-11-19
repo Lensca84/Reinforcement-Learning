@@ -203,24 +203,22 @@ class Maze:
                 for s in range(self.n_states):
                     for a in range(self.n_actions):
                         next_states = self.__possible_moves(s, a);
-                        # Reward when too old
-                        if self.states[s].too_old:
-                            rewards[s,a] = self.TOO_OLD_REWARD;
-                        # Reward for hitting a wall
-                        elif s == next_states[0] and a != self.STAY:
-                            rewards[s,a] = self.IMPOSSIBLE_REWARD;
-                        # Reward when too old
-                        elif self.states[s].too_old:
-                            rewards[s,a] = self.TOO_OLD_REWARD;
-                        # Reward for being eated by the minotaur
-                        elif self.states[s].player_pos == self.states[s].min_pos:
-                            rewards[s,a] = self.EATED_REWARD
-                        # Reward for reaching the exit
-                        elif self.maze[self.states[s].player_pos] == 2:
-                            rewards[s,a] = self.GOAL_REWARD;
-                        # Reward for taking a step to an empty cell that is not the exit
-                        else:
-                            rewards[s,a] = self.STEP_REWARD;
+                        for next_s in next_states:
+                            # Reward when too old
+                            if self.states[s].too_old:
+                                rewards[s,a] = self.TOO_OLD_REWARD;
+                            # Reward for hitting a wall
+                            elif s == next_s and a != self.STAY:
+                                rewards[s,a] = self.IMPOSSIBLE_REWARD;
+                            # Reward for being eated by the minotaur
+                            elif self.states[next_s].player_pos == self.states[next_s].min_pos:
+                                rewards[s,a] = self.EATED_REWARD
+                            # Reward for reaching the exit
+                            elif self.maze[self.states[next_s].player_pos] == 2:
+                                rewards[s,a] = self.GOAL_REWARD;
+                            # Reward for taking a step to an empty cell that is not the exit
+                            else:
+                                rewards[s,a] = self.STEP_REWARD;
 
             else:
                 for s in range(self.n_states):
@@ -497,10 +495,10 @@ def animate_solution(maze, path):
 
         if i > 0:
             if path[i].too_old:
-                grid.get_celld()[(path[i].player_pos)].set_facecolor(RED)
-                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player is too old')
-                grid.get_celld()[(path[i].min_pos)].set_facecolor(CHOCOLATE)
-                grid.get_celld()[(path[i].min_pos)].get_text().set_text('Minotaur')
+                grid.get_celld()[(path[i-1].player_pos)].set_facecolor(RED)
+                grid.get_celld()[(path[i-1].player_pos)].get_text().set_text('Player is too old')
+                grid.get_celld()[(path[i-1].min_pos)].set_facecolor(CHOCOLATE)
+                grid.get_celld()[(path[i-1].min_pos)].get_text().set_text('Minotaur')
                 break
 
         grid.get_celld()[(path[i].player_pos)].set_facecolor(BLUE)
@@ -520,6 +518,6 @@ def animate_solution(maze, path):
 
         display.display(fig)
         display.clear_output(wait=True)
-        time.sleep(1)
+        time.sleep(0.1)
 
 # %%
