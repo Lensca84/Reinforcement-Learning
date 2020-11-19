@@ -24,7 +24,7 @@ class State:
     def __init__(self, player_pos, min_pos):
         self.player_pos = player_pos
         self.min_pos = min_pos
-    
+
     def __hash__(self):
         return hash((self.player_pos, self.min_pos))
 
@@ -246,7 +246,7 @@ class Maze:
                 path.append(self.states[next_s])
                 # Update time and state for next iteration
                 t +=1;
-        print('Simulation done !')
+        #print('Simulation done !')
         return path
 
 
@@ -306,7 +306,7 @@ def dynamic_programming(env, horizon):
         V[:,t] = np.max(Q,1);
         # The optimal action is the one that maximizes the Q function
         policy[:,t] = np.argmax(Q,1);
-    
+
     print('Dynamic programming done !')
     return V, policy;
 
@@ -438,10 +438,10 @@ def animate_solution(maze, path):
             grid.get_celld()[(path[i-1].min_pos)].set_facecolor(col_map[maze[path[i-1].min_pos]])
             grid.get_celld()[(path[i-1].min_pos)].get_text().set_text('')
 
-        grid.get_celld()[(path[i].player_pos)].set_facecolor(BLUE) 
-        grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player') 
-        grid.get_celld()[(path[i].min_pos)].set_facecolor(CHOCOLATE) 
-        grid.get_celld()[(path[i].min_pos)].get_text().set_text('Minotaur') 
+        grid.get_celld()[(path[i].player_pos)].set_facecolor(BLUE)
+        grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player')
+        grid.get_celld()[(path[i].min_pos)].set_facecolor(CHOCOLATE)
+        grid.get_celld()[(path[i].min_pos)].get_text().set_text('Minotaur')
 
         if i > 0:
             if path[i].player_pos == path[i].min_pos:
