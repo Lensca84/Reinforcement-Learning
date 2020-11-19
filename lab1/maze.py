@@ -215,7 +215,7 @@ class Maze:
             s = self.map[State(start, start_min)];
             # Add the starting position in the maze to the path
             path.append(State(start, start_min));
-            while t < horizon-1:
+            while t < horizon-1 and not(self.states[s].player_pos == start_min):
                 # Move to next state given the policy and the current state
                 next_s = random.choice(self.__possible_moves(s,policy[s,t]));
                 # Add the position in the maze corresponding to the next state
