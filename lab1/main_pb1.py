@@ -16,8 +16,11 @@ maze = np.array([
 
 # Create an environment maze
 MINOTAUR_CAN_STAY = True
-env = mz.Maze(maze,MINOTAUR_CAN_STAY)
-env2 = mz.Maze(maze)
+
+#%%
+
+#env = mz.Maze(maze,MINOTAUR_CAN_STAY)
+#env2 = mz.Maze(maze)
 #env.show()
 
 # # Finite horizon
@@ -34,37 +37,58 @@ env2 = mz.Maze(maze)
 # Show the shortest path
 #mz.animate_solution(maze, path)
 
-N = 10000
+#N = 10000
+#method = 'DynProg';
+#start  = (0,0);
+#start_min = (6,5)
+#Tmin = 14
+#Tmax = 40
+#tab = np.zeros(Tmax-Tmin)
+#tab2 = np.zeros(Tmax-Tmin)
+#
+#for T in range(Tmin,Tmax):
+#    count = 0
+#    count2 = 0
+#    print('Horizon = ', T)
+#    V, policy= mz.dynamic_programming(env,T)
+#    V2, policy2= mz.dynamic_programming(env2,T)
+#    for _ in range(N):
+#        path = env.simulate(start, start_min, policy, method);
+#        if path[-1].player_pos == start_min:
+#            count += 1
+#        path2 = env2.simulate(start, start_min, policy2, method);
+#        if path2[-1].player_pos == start_min:
+#            count2 += 1
+#    tab[T-Tmin] = count/N
+#    tab2[T-Tmin] = count2/N
+#
+#plt.figure(1)
+#Time = np.arange(Tmin,Tmax)
+#plt.plot(Time,tab,label='Minotaur can stay')
+#plt.plot(Time,tab2,label='Minotaur cannot stay')
+#plt.xlabel('Time horizon')
+#plt.ylabel('Maximal probability of exiting the maze')
+#plt.grid()
+#plt.legend()
+#plt.show()
+
+#%%
+
+old = True
+avg_life = 30
+
+env = mz.Maze(maze,MINOTAUR_CAN_STAY, old, avg_life)
+
+# Finite horizon
+horizon = 20
+# Solve the MDP problem with dynamic programming
+V, policy= mz.dynamic_programming(env,horizon);
+
 method = 'DynProg';
 start  = (0,0);
 start_min = (6,5)
-Tmin = 14
-Tmax = 40
-tab = np.zeros(Tmax-Tmin)
-tab2 = np.zeros(Tmax-Tmin)
+path = env.simulate(start, start_min, policy, method);
 
-for T in range(Tmin,Tmax):
-    count = 0
-    count2 = 0
-    print('Horizon = ', T)
-    V, policy= mz.dynamic_programming(env,T)
-    V2, policy2= mz.dynamic_programming(env2,T)
-    for _ in range(N):
-        path = env.simulate(start, start_min, policy, method);
-        if path[-1].player_pos == start_min:
-            count += 1
-        path2 = env2.simulate(start, start_min, policy2, method);
-        if path2[-1].player_pos == start_min:
-            count2 += 1
-    tab[T-Tmin] = count/N
-    tab2[T-Tmin] = count2/N
-
-plt.figure(1)
-Time = np.arange(Tmin,Tmax)
-plt.plot(Time,tab,label='Minotaur can stay')
-plt.plot(Time,tab2,label='Minotaur cannot stay')
-plt.xlabel('Time horizon')
-plt.ylabel('Maximal probability of exiting the maze')
-plt.grid()
-plt.legend()
-plt.show()
+# Show the shortest path
+mz.animate_solution(maze, path)
+# %%
