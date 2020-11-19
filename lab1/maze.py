@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 import time
@@ -58,7 +59,7 @@ class Maze:
     MINOTAUR_CAN_STAY = False;
 
 
-    def __init__(self, maze, weights=None, random_rewards=False):
+    def __init__(self, maze, min_stay=False, weights=None, random_rewards=False):
         """ Constructor of the environment Maze.
         """
         self.maze                     = maze;
@@ -69,6 +70,7 @@ class Maze:
         self.transition_probabilities = self.__transitions();
         self.rewards                  = self.__rewards(weights=weights,
                                                 random_rewards=random_rewards);
+        self.MINOTAUR_CAN_STAY = min_stay
 
     def __actions(self):
         actions = dict();
@@ -244,18 +246,20 @@ class Maze:
                 path.append(self.states[next_s])
                 # Update time and state for next iteration
                 t +=1;
+        print('Simulation done !')
         return path
 
 
     def show(self):
-        print('The states are :')
-        print(self.states)
-        print('The actions are:')
-        print(self.actions)
-        print('The mapping of the states:')
-        print(self.map)
+        #print('The states are :')
+        #print(self.states)
+        #print('The actions are:')
+        #print(self.actions)
+        #print('The mapping of the states:')
+        #print(self.map)
         print('The rewards:')
         print(self.rewards)
+        print('Initialisation done !')
 
 def dynamic_programming(env, horizon):
     """ Solves the shortest path problem using dynamic programming
@@ -302,6 +306,8 @@ def dynamic_programming(env, horizon):
         V[:,t] = np.max(Q,1);
         # The optimal action is the one that maximizes the Q function
         policy[:,t] = np.argmax(Q,1);
+    
+    print('Dynamic programming done !')
     return V, policy;
 
 def value_iteration(env, gamma, epsilon):
@@ -426,22 +432,29 @@ def animate_solution(maze, path):
 
     # Update the color at each frame
     for i in range(len(path)):
+        if i > 0:
+            grid.get_celld()[(path[i-1].player_pos)].set_facecolor(col_map[maze[path[i-1].player_pos]])
+            grid.get_celld()[(path[i-1].player_pos)].get_text().set_text('')
+            grid.get_celld()[(path[i-1].min_pos)].set_facecolor(col_map[maze[path[i-1].min_pos]])
+            grid.get_celld()[(path[i-1].min_pos)].get_text().set_text('')
+
         grid.get_celld()[(path[i].player_pos)].set_facecolor(BLUE) 
         grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player') 
         grid.get_celld()[(path[i].min_pos)].set_facecolor(CHOCOLATE) 
         grid.get_celld()[(path[i].min_pos)].get_text().set_text('Minotaur') 
+
         if i > 0:
             if path[i].player_pos == path[i].min_pos:
                 grid.get_celld()[(path[i].player_pos)].set_facecolor(RED)
-                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player is eaten')
-            elif path[i].player_pos == (6, 5) :
+                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player has been eaten')
+                break
+            elif maze[path[i].player_pos[0], path[i].player_pos[1]] == 2 :
                 grid.get_celld()[(path[i].player_pos)].set_facecolor(LIGHT_GREEN)
                 grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player is out')
-            else:
-                grid.get_celld()[(path[i-1].player_pos)].set_facecolor(col_map[maze[path[i-1].player_pos]])
-                grid.get_celld()[(path[i-1].player_pos)].get_text().set_text('')
-                grid.get_celld()[(path[i-1].min_pos)].set_facecolor(col_map[maze[path[i-1].min_pos]])
-                grid.get_celld()[(path[i-1].min_pos)].get_text().set_text('')
+                break
+
         display.display(fig)
         display.clear_output(wait=True)
         time.sleep(1)
+
+# %%
