@@ -18,6 +18,8 @@ LIGHT_ORANGE = '#FAE0C3';
 BLUE         = '#0000FF';
 RED          = '#FF0000';
 CHOCOLATE    = '#D2691E';
+YELLOW       = '#FFFF00';
+ORANGE       = '#FFA500';
 
 class State:
 
@@ -79,13 +81,13 @@ class Bank:
         actions[self.MOVE_DOWN]  = (1,0);
         return actions;
 
-    def __minotaur_actions(self):
-        minotaur_actions = dict();
-        minotaur_actions[self.MOVE_LEFT]  = (0,-1);
-        minotaur_actions[self.MOVE_RIGHT] = (0, 1);
-        minotaur_actions[self.MOVE_UP]    = (-1,0);
-        minotaur_actions[self.MOVE_DOWN]  = (1,0);
-        return minotaur_actions;
+    def __police_actions(self):
+        police_actions = dict();
+        police_actions[self.MOVE_LEFT]  = (0,-1);
+        police_actions[self.MOVE_RIGHT] = (0, 1);
+        police_actions[self.MOVE_UP]    = (-1,0);
+        police_actions[self.MOVE_DOWN]  = (1,0);
+        return police_actions;
 
     def __states(self):
         states = dict();
@@ -122,9 +124,9 @@ class Bank:
         pol_hiting_border = (row_pol == -1) or (row_pol == self.maze.shape[0]) or \
                             (col_pol == -1) or (col_pol == self.maze.shape[1])
         player_row = self.states[state].player_pos[0]
-        player_col = self.states[state].player_col[0]
-        pol_row = self.states[state].pol_pos[0]
-        pol_col = self.states[state].pol_col[0]
+        player_col = self.states[state].player_pos[1]
+        pol_row = self.states[state].police_pos[0]
+        pol_col = self.states[state].police_pos[1]
 
         pol_top_player            = (player_col == pol_col and player_row > pol_row) and \
                                     (action_pol == self.MOVE_LEFT or action_pol == self.MOVE_RIGHT or \
@@ -144,14 +146,14 @@ class Bank:
         pol_left_player           = (player_col > pol_col and player_row == pol_row) and \
                                     (action_pol == self.MOVE_DOWN or action_pol == self.MOVE_UP or \
                                     action_pol == self.MOVE_RIGHT)
-        pol_top_left_player       = (player_col < pol_col and player_row > pol_row) and \
+        pol_top_left_player       = (player_col > pol_col and player_row > pol_row) and \
                                     (action_pol == self.MOVE_DOWN or action_pol == self.MOVE_RIGHT)
 
         pol_player_direction = pol_top_player or pol_top_right_player or pol_right_player or \
                                pol_bottom_right_player or pol_bottom_player or pol_bottom_left_player or \
                                pol_left_player or pol_top_left_player
 
-        if pol_hiting_border and not(pol_player_direction):
+        if pol_hiting_border or not(pol_player_direction):
             return None
 
         # Based on the impossiblity check return the next state.
@@ -171,7 +173,7 @@ class Bank:
 
     def __is_caught(self, s):
         state = self.states[s]
-        return state.player_pos == state.pol_pos
+        return state.player_pos == state.police_pos
 
     def __transitions(self):
         """ Computes the transition probabilities for every state action pair.
@@ -186,8 +188,8 @@ class Bank:
         # are deterministic.
         for s in range(self.n_states):
             for a in range(self.n_actions):
-                if self.is_caught(s):
-                    transition_probabilities[START, s, a] = 1;
+                if self.__is_caught(s):
+                    transition_probabilities[self.map[self.START], s, a] = 1;
                 else:
                     next_states = self.__possible_moves(s,a);
                     p = 1 / len(next_states)
@@ -202,12 +204,12 @@ class Bank:
         for s in range(self.n_states):
             for a in range(self.n_actions):
                 next_states = self.__possible_moves(s, a);
-                # Reward for hitting a wall
-                if s == next_states[0] and a != self.STAY:
-                    rewards[s,a] = self.IMPOSSIBLE_REWARD;
                 # Reward for being caught by the police
-                elif self.is_caught(s):
+                if self.__is_caught(s):
                     rewards[s,a] = self.CAUGHT_REWARD;
+                # Reward for hitting a wall
+                elif s == next_states[0] and a != self.STAY:
+                    rewards[s,a] = self.IMPOSSIBLE_REWARD;
                 # Reward for reaching the exit
                 elif self.maze[self.states[s].player_pos] == 1:
                     rewards[s,a] = self.BANK_REWARD;
@@ -217,28 +219,26 @@ class Bank:
 
         return rewards;
 
-    def simulate(self, policy):
+    def simulate(self, policy, duration):
         path = list();
-        # Deduce the horizon from the policy shape
-        horizon = policy.shape[1];
         # Initialize current state and time
         t = 0;
         s = self.map[self.START];
         # Add the starting position in the maze to the path
         path.append(self.START);
-        while t < horizon-1:
+        while t < duration:
             # Move to next state given the policy and the current state
             if self.__is_caught(s):
                 next_s = self.START;
             else:
-                next_s = random.choice(self.__possible_moves(s,policy[s,t]));
+                next_s = random.choice(self.__possible_moves(s,policy[s]));
             # Add the position in the maze corresponding to the next state
             # to the path
             path.append(self.states[next_s])
             # Update time and state for next iteration
             t +=1;
             s = next_s;
-        #print('Simulation done !')
+        print('Simulation done !')
         return path
 
 
@@ -356,6 +356,7 @@ def value_iteration(env, gamma, epsilon):
     # Compute policy
     policy = np.argmax(Q,1);
     # Return the obtained policy
+    #print("Value iteration done !")
     return V, policy;
 
 def draw_maze(maze):
@@ -391,7 +392,7 @@ def draw_maze(maze):
 def animate_solution(maze, path):
 
     # Map a color to each cell in the maze
-    col_map = {0: WHITE, 1: BLACK, 2: LIGHT_GREEN};
+    col_map = {0: WHITE, 1: YELLOW};
 
     # Size of the maze
     rows,cols = maze.shape;
@@ -427,30 +428,28 @@ def animate_solution(maze, path):
         if i > 0:
             grid.get_celld()[(path[i-1].player_pos)].set_facecolor(col_map[maze[path[i-1].player_pos]])
             grid.get_celld()[(path[i-1].player_pos)].get_text().set_text('')
-            grid.get_celld()[(path[i-1].pol_pos)].set_facecolor(col_map[maze[path[i-1].pol_pos]])
-            grid.get_celld()[(path[i-1].pol_pos)].get_text().set_text('')
+            grid.get_celld()[(path[i-1].police_pos)].set_facecolor(col_map[maze[path[i-1].police_pos]])
+            grid.get_celld()[(path[i-1].police_pos)].get_text().set_text('')
 
-        grid.get_celld()[(path[i].player_pos)].set_facecolor(LIGHT_PURPLE)
+        grid.get_celld()[(path[i].player_pos)].set_facecolor(ORANGE)
         grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player')
-        if i%2 = 0:
-            grid.get_celld()[(path[i].pol_pos)].set_facecolor(BLUE)
-            grid.get_celld()[(path[i].pol_pos)].get_text().set_text('Police')
+        if i%2 == 0:
+            grid.get_celld()[(path[i].police_pos)].set_facecolor(BLUE)
+            grid.get_celld()[(path[i].police_pos)].get_text().set_text('Police')
         if i%2 != 0:
-            grid.get_celld()[(path[i].pol_pos)].set_facecolor(RED)
-            grid.get_celld()[(path[i].pol_pos)].get_text().set_text('Police')
+            grid.get_celld()[(path[i].police_pos)].set_facecolor(RED)
+            grid.get_celld()[(path[i].police_pos)].get_text().set_text('Police')
 
         if i > 0:
-            if path[i].player_pos == path[i].pol_pos:
+            if path[i].player_pos == path[i].police_pos:
                 grid.get_celld()[(path[i].player_pos)].set_facecolor(LIGHT_RED)
                 grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player has been caught')
-                break
-            elif maze[path[i].player_pos[0], path[i].player_pos[1]] == 2 :
-                grid.get_celld()[(path[i].player_pos)].set_facecolor(LIGHT_GREEN)
+            elif maze[path[i].player_pos[0], path[i].player_pos[1]] == 1:
+                grid.get_celld()[(path[i].player_pos)].set_facecolor(ORANGE)
                 grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player is robbing')
-                break
 
         display.display(fig)
         display.clear_output(wait=True)
-        time.sleep(0.1)
+        time.sleep(1)
 
 # %%

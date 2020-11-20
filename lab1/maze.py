@@ -301,7 +301,7 @@ class Maze:
                 path.append(self.states[next_s])
                 # Update time and state for next iteration
                 t +=1;
-        #print('Simulation done !')
+        print('Simulation done !')
         return path
 
 
@@ -419,6 +419,7 @@ def value_iteration(env, gamma, epsilon):
     # Compute policy
     policy = np.argmax(Q,1);
     # Return the obtained policy
+    print("Value iteration done !")
     return V, policy;
 
 def draw_maze(maze):
