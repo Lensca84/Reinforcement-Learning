@@ -92,7 +92,7 @@ path = env.simulate(start, start_min, policy, method);
 # Show the shortest path
 mz.animate_solution(maze, path)
 # %%
-N = 10000
+N = 100000
 method = 'DynProg';
 start  = (0,0);
 start_min = (6,5)
@@ -101,6 +101,7 @@ counter_old = 0
 counter_out = 0
 avg_age_general = 0
 avg_age_old = 0
+avg_age_out = 0
 
 for k in range(N):
     path = env.simulate(start, start_min, policy, method);
@@ -109,12 +110,14 @@ for k in range(N):
         counter_old += 1
     elif path[-1].player_pos == start_min:
         counter_out += 1
+        avg_age_out += len(path)
     else:
         counter_eaten += 1
     avg_age_general += len(path)
 
 avg_age_general /= N
 avg_age_old /= counter_old
+avg_age_out /= counter_out
 
 print("Number of death from oldness : ", counter_old)
 print("Number of death from being eaten : ", counter_eaten)
@@ -122,6 +125,7 @@ print("Number of going out : ", counter_out)
 print("Probability of getting out alive : ", counter_out/N)
 print("Average age in general : ", avg_age_general)
 print("Average age from oldness : ", avg_age_old)
+print("Average age when we are out : ", avg_age_out)
 
 
 # %%
