@@ -125,25 +125,25 @@ class Bank:
         player_col = self.states[state].player_col[0]
         pol_row = self.states[state].pol_pos[0]
         pol_col = self.states[state].pol_col[0]
-        
+
         pol_top_player            = (player_col == pol_col and player_row > pol_row) and \
                                     (action_pol == self.MOVE_LEFT or action_pol == self.MOVE_RIGHT or \
-                                    action_pol == self.MOVE_DOWN) 
+                                    action_pol == self.MOVE_DOWN)
         pol_top_right_player      = (player_col < pol_col and player_row > pol_row) and \
                                     (action_pol == self.MOVE_DOWN or action_pol == self.MOVE_LEFT)
         pol_right_player          = (player_col < pol_col and player_row == pol_row) and \
                                     (action_pol == self.MOVE_LEFT or action_pol == self.MOVE_UP or \
-                                    action_pol == self.MOVE_DOWN) 
+                                    action_pol == self.MOVE_DOWN)
         pol_bottom_right_player   = (player_col < pol_col and player_row < pol_row) and \
                                     (action_pol == self.MOVE_UP or action_pol == self.MOVE_LEFT)
         pol_bottom_player         = (player_col == pol_col and player_row < pol_row) and \
                                     (action_pol == self.MOVE_LEFT or action_pol == self.MOVE_UP or \
-                                    action_pol == self.MOVE_RIGHT) 
+                                    action_pol == self.MOVE_RIGHT)
         pol_bottom_left_player    = (player_col > pol_col and player_row < pol_row) and \
                                     (action_pol == self.MOVE_UP or action_pol == self.MOVE_RIGHT)
         pol_left_player           = (player_col > pol_col and player_row == pol_row) and \
                                     (action_pol == self.MOVE_DOWN or action_pol == self.MOVE_UP or \
-                                    action_pol == self.MOVE_RIGHT) 
+                                    action_pol == self.MOVE_RIGHT)
         pol_top_left_player       = (player_col < pol_col and player_row > pol_row) and \
                                     (action_pol == self.MOVE_DOWN or action_pol == self.MOVE_RIGHT)
 
@@ -427,31 +427,26 @@ def animate_solution(maze, path):
         if i > 0:
             grid.get_celld()[(path[i-1].player_pos)].set_facecolor(col_map[maze[path[i-1].player_pos]])
             grid.get_celld()[(path[i-1].player_pos)].get_text().set_text('')
-            grid.get_celld()[(path[i-1].min_pos)].set_facecolor(col_map[maze[path[i-1].min_pos]])
-            grid.get_celld()[(path[i-1].min_pos)].get_text().set_text('')
+            grid.get_celld()[(path[i-1].pol_pos)].set_facecolor(col_map[maze[path[i-1].pol_pos]])
+            grid.get_celld()[(path[i-1].pol_pos)].get_text().set_text('')
 
-
-        if i > 0:
-            if path[i].too_old:
-                grid.get_celld()[(path[i-1].player_pos)].set_facecolor(RED)
-                grid.get_celld()[(path[i-1].player_pos)].get_text().set_text('Player is too old')
-                grid.get_celld()[(path[i-1].min_pos)].set_facecolor(CHOCOLATE)
-                grid.get_celld()[(path[i-1].min_pos)].get_text().set_text('Minotaur')
-                break
-
-        grid.get_celld()[(path[i].player_pos)].set_facecolor(BLUE)
+        grid.get_celld()[(path[i].player_pos)].set_facecolor(LIGHT_PURPLE)
         grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player')
-        grid.get_celld()[(path[i].min_pos)].set_facecolor(CHOCOLATE)
-        grid.get_celld()[(path[i].min_pos)].get_text().set_text('Minotaur')
+        if i%2 = 0:
+            grid.get_celld()[(path[i].pol_pos)].set_facecolor(BLUE)
+            grid.get_celld()[(path[i].pol_pos)].get_text().set_text('Police')
+        if i%2 != 0:
+            grid.get_celld()[(path[i].pol_pos)].set_facecolor(RED)
+            grid.get_celld()[(path[i].pol_pos)].get_text().set_text('Police')
 
         if i > 0:
-            if path[i].player_pos == path[i].min_pos:
-                grid.get_celld()[(path[i].player_pos)].set_facecolor(RED)
-                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player has been eaten')
+            if path[i].player_pos == path[i].pol_pos:
+                grid.get_celld()[(path[i].player_pos)].set_facecolor(LIGHT_RED)
+                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player has been caught')
                 break
             elif maze[path[i].player_pos[0], path[i].player_pos[1]] == 2 :
                 grid.get_celld()[(path[i].player_pos)].set_facecolor(LIGHT_GREEN)
-                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player is out')
+                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player is robbing')
                 break
 
         display.display(fig)
