@@ -16,7 +16,7 @@ env = rb.Bank(maze)
 gamma = 0.8
 
 # Simulate the shortest path starting from position A
-duration = 100000
+duration = 1000000
 
 #%%
 path, V_s0, Q = env.simulate_QLearning(gamma, duration);
@@ -72,9 +72,6 @@ plt.show()
 
 # %%
 
-
-
-
 plt.figure()
 plt.xlabel("Time t")
 plt.ylabel("The value function evaluated at the intial state V(s0)")
@@ -91,3 +88,5 @@ plt.plot(time, V_s0, label="Q learning")
 
 plt.legend()
 plt.show()
+
+# %%

@@ -236,7 +236,7 @@ class Bank:
         return path, V_s0, Q
 
 
-        def simulate_SARSA_epsilon(self, gamma, duration):
+    def simulate_SARSA_epsilon(self, gamma, duration):
         path = list();
         # Initialize current state and time
         t = 0;
@@ -250,7 +250,7 @@ class Bank:
         # Add the starting position in the maze to the path
         path.append(self.START);
         while t < duration:
-            epsilon = 1/(t+1) 
+            epsilon = 1/(np.log(t+1)+1) 
             #2. Observations
             a = self.policy_SARSA(s,Q,epsilon)
             next_s = random.choice(self.__possible_moves(s,a))
