@@ -159,7 +159,7 @@ class Bank:
         else:
             return self.STEP_REWARD;
 
-    def caracteristic(n,s,a):
+    def caracteristic(self,n,s,a):
         return 1/(n[s,a]**(2/3))
 
     def policy(self):
