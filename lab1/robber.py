@@ -53,12 +53,12 @@ class Bank:
 
     # Reward values
     STEP_REWARD = 0
-    BANK_REWARD = 10
+    BANK_REWARD = 1
     IMPOSSIBLE_REWARD = -100
-    CAUGHT_REWARD = -50
+    CAUGHT_REWARD = -10
 
     # Starting places
-    START = State((0,0),(1,2))
+    START = State((0,0),(3,3))
 
 
     def __init__(self, maze):
@@ -69,8 +69,6 @@ class Bank:
         self.states, self.map         = self.__states();
         self.n_actions                = len(self.actions);
         self.n_states                 = len(self.states);
-        self.transition_probabilities = self.__transitions();
-        self.rewards                  = self.__rewards();
 
     def __actions(self):
         actions = dict();
@@ -175,49 +173,20 @@ class Bank:
         state = self.states[s]
         return state.player_pos == state.police_pos
 
-    def __transitions(self):
-        """ Computes the transition probabilities for every state action pair.
-            :return numpy.tensor transition probabilities: tensor of transition
-            probabilities of dimension S*S*A
-        """
-        # Initialize the transition probailities tensor (S,S,A)
-        dimensions = (self.n_states,self.n_states,self.n_actions);
-        transition_probabilities = np.zeros(dimensions);
-
-        # Compute the transition probabilities. Note that the transitions
-        # are deterministic.
-        for s in range(self.n_states):
-            for a in range(self.n_actions):
-                if self.__is_caught(s):
-                    transition_probabilities[self.map[self.START], s, a] = 1;
-                else:
-                    next_states = self.__possible_moves(s,a);
-                    p = 1 / len(next_states)
-                    for next_s in next_states:
-                        transition_probabilities[next_s, s, a] = p;
-        return transition_probabilities;
-
-    def __rewards(self):
-
-        rewards = np.zeros((self.n_states, self.n_actions));
-
-        for s in range(self.n_states):
-            for a in range(self.n_actions):
-                next_states = self.__possible_moves(s, a);
-                # Reward for being caught by the police
-                if self.__is_caught(s):
-                    rewards[s,a] = self.CAUGHT_REWARD;
-                # Reward for hitting a wall
-                elif s == next_states[0] and a != self.STAY:
-                    rewards[s,a] = self.IMPOSSIBLE_REWARD;
-                # Reward for reaching the exit
-                elif self.maze[self.states[s].player_pos] == 1:
-                    rewards[s,a] = self.BANK_REWARD;
-                # Reward for taking a step to an empty cell that is not the exit
-                else:
-                    rewards[s,a] = self.STEP_REWARD;
-
-        return rewards;
+    def r(self, s, a):
+        next_states = self.__possible_moves(s, a);
+        # Reward for being caught by the police
+        if self.__is_caught(s):
+            return self.CAUGHT_REWARD;
+        # Reward for hitting a wall
+        elif s == next_states[0] and a != self.STAY:
+            return self.IMPOSSIBLE_REWARD;
+        # Reward for reaching the exit
+        elif self.maze[self.states[s].player_pos] == 1:
+            return self.BANK_REWARD;
+        # Reward for taking a step to an empty cell that is not the exit
+        else:
+            return self.STEP_REWARD;
 
     def simulate(self, policy, duration):
         path = list();
