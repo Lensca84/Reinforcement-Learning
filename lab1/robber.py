@@ -121,37 +121,8 @@ class Bank:
 
         pol_hiting_border = (row_pol == -1) or (row_pol == self.maze.shape[0]) or \
                             (col_pol == -1) or (col_pol == self.maze.shape[1])
-        player_row = self.states[state].player_pos[0]
-        player_col = self.states[state].player_pos[1]
-        pol_row = self.states[state].police_pos[0]
-        pol_col = self.states[state].police_pos[1]
 
-        pol_top_player            = (player_col == pol_col and player_row > pol_row) and \
-                                    (action_pol == self.MOVE_LEFT or action_pol == self.MOVE_RIGHT or \
-                                    action_pol == self.MOVE_DOWN)
-        pol_top_right_player      = (player_col < pol_col and player_row > pol_row) and \
-                                    (action_pol == self.MOVE_DOWN or action_pol == self.MOVE_LEFT)
-        pol_right_player          = (player_col < pol_col and player_row == pol_row) and \
-                                    (action_pol == self.MOVE_LEFT or action_pol == self.MOVE_UP or \
-                                    action_pol == self.MOVE_DOWN)
-        pol_bottom_right_player   = (player_col < pol_col and player_row < pol_row) and \
-                                    (action_pol == self.MOVE_UP or action_pol == self.MOVE_LEFT)
-        pol_bottom_player         = (player_col == pol_col and player_row < pol_row) and \
-                                    (action_pol == self.MOVE_LEFT or action_pol == self.MOVE_UP or \
-                                    action_pol == self.MOVE_RIGHT)
-        pol_bottom_left_player    = (player_col > pol_col and player_row < pol_row) and \
-                                    (action_pol == self.MOVE_UP or action_pol == self.MOVE_RIGHT)
-        pol_left_player           = (player_col > pol_col and player_row == pol_row) and \
-                                    (action_pol == self.MOVE_DOWN or action_pol == self.MOVE_UP or \
-                                    action_pol == self.MOVE_RIGHT)
-        pol_top_left_player       = (player_col > pol_col and player_row > pol_row) and \
-                                    (action_pol == self.MOVE_DOWN or action_pol == self.MOVE_RIGHT)
-
-        pol_player_direction = pol_top_player or pol_top_right_player or pol_right_player or \
-                               pol_bottom_right_player or pol_bottom_player or pol_bottom_left_player or \
-                               pol_left_player or pol_top_left_player
-
-        if pol_hiting_border or not(pol_player_direction):
+        if pol_hiting_border:
             return None
 
         # Based on the impossiblity check return the next state.
