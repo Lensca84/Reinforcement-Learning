@@ -166,7 +166,10 @@ class Bank:
         else:
             return 1/(nsa**(2/3))
 
-    def simulate_QLearning(self, policy, gamma, duration):
+    def policy():
+        return random.randint(5)
+
+    def simulate_QLearning(self, gamma, duration):
         path = list();
         # Initialize current state and time
         t = 0;
@@ -179,10 +182,10 @@ class Bank:
         path.append(self.START);
         while t < duration:
             #2. Observations
-            a = policy[s]
+            a = self.policy()
             next_s = random.choice(self.__possible_moves(s,a))
             #3. Q-function improvement
-            Q[s,a] += caracteristic(n,s,a)*(r(s,a)+gamma*(max(Q[next_s])-Q[s,a]))
+            Q[s,a] += self.caracteristic(n,s,a)*(self.r(s,a)+gamma*(max(Q[next_s])-Q[s,a]))
             V_s0[t] = max(Q[s])
             # Add the position in the maze corresponding to the next state
             # to the path
