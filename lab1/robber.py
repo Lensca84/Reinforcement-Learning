@@ -224,6 +224,8 @@ class Bank:
         # Initialize current state and time
         t = 0;
         s = self.map[self.START];
+        Q = np.zeros(self.n_states ,self.n_actions)
+        n = np.zeros(self.n_states ,self.n_actions)
         # Add the starting position in the maze to the path
         path.append(self.START);
         while t < duration:
