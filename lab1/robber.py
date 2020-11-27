@@ -236,6 +236,41 @@ class Bank:
         return path, V_s0, Q
 
 
+        def simulate_SARSA_epsilon(self, gamma, duration):
+        path = list();
+        # Initialize current state and time
+        t = 0;
+        s0 = self.map[self.START];
+        s = s0
+        Q = np.zeros((self.n_states,self.n_actions))
+        n = np.zeros((self.n_states,self.n_actions))
+        V_s0 = np.zeros(duration)
+        policy = np.zeros(self.n_states)
+        period = duration//100
+        # Add the starting position in the maze to the path
+        path.append(self.START);
+        while t < duration:
+            epsilon = 1/(t+1) 
+            #2. Observations
+            a = self.policy_SARSA(s,Q,epsilon)
+            next_s = random.choice(self.__possible_moves(s,a))
+            next_a = self.policy_SARSA(next_s,Q,epsilon)
+            #3. Q-function improvement
+            n[s,a] += 1
+            Q[s,a] += self.caracteristic(n,s,a)*(self.r(s,a)+gamma*Q[next_s, next_a] - Q[s,a])
+            V_s0[t] = max(Q[s0])
+            # Add the position in the maze corresponding to the next state
+            # to the path
+            path.append(self.states[next_s])
+            # Update time and state for next iteration
+            t +=1;
+            s = next_s;
+            if t%(period) == 0:
+                print('Simulation at ', t//period, "%")
+        print('Simulation done !')
+        return path, V_s0, Q
+
+
     def show(self):
         #print('The states are :')
         #print(self.states)

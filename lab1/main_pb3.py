@@ -26,7 +26,7 @@ print("Q : ", Q)
 #%%
 time = np.arange(duration)
 print("Vs0 : ", V_s0)
-    
+
 plt.figure()
 plt.xlabel("Time t")
 plt.ylabel("The value function evaluated at the intial state V(s0)")
@@ -44,7 +44,7 @@ print("Q : ", Q)
 #%%
 time = np.arange(duration)
 print("Vs0 : ", V_s0)
-    
+
 plt.figure()
 plt.xlabel("Time t")
 plt.ylabel("The value function evaluated at the intial state V(s0)")
@@ -72,11 +72,22 @@ plt.show()
 
 # %%
 
+
+
+
 plt.figure()
 plt.xlabel("Time t")
 plt.ylabel("The value function evaluated at the intial state V(s0)")
-
+epsilon = 0.1
 time = np.arange(duration)
+_, V_s0, _ = env.simulate_SARSA(gamma, epsilon, duration)
+plt.plot(time, V_s0, label="With epsilon = "+str(epsilon))
+
+_, V_s0, _ = env.simulate_SARSA_epsilon(gamma, duration)
+plt.plot(time, V_s0, label="With epsilon = 1/t")
+
+_, V_s0, _ = env.simulate_QLearning(gamma, duration);
+plt.plot(time, V_s0, label="Q learning")
 
 plt.legend()
 plt.show()
