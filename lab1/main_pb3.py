@@ -13,25 +13,46 @@ maze = np.array([
 
 # Create an environment maze
 env = rb.Bank(maze)
-gamma = 0.99
+gamma = 0.8
 
 # Simulate the shortest path starting from position A
-duration = 100000
+duration = 1000000
 
+#%%
 path, V_s0, Q = env.simulate_QLearning(gamma, duration);
 
 print("Q : ", Q)
 
 #%%
-
 time = np.arange(duration)
+print("Vs0 : ", V_s0)
     
 plt.figure()
 plt.xlabel("Time t")
-plt.ylabel("The value function evaluated at the intial state")
+plt.ylabel("The value function evaluated at the intial state V(s0)")
 plt.plot(time, V_s0)
 plt.show()
 
 #rb.animate_solution(maze, path)
 
+# %%
+epsilons = np.linspace(0.1, 0.5, 0.1)
+epsilon = 0.1
+path, V_s0, Q = env.simulate_SARSA(gamma, epsilon, duration);
+
+print("Q : ", Q)
+
+#%%
+time = np.arange(duration)
+print("Vs0 : ", V_s0)
+    
+plt.figure()
+plt.xlabel("Time t")
+plt.ylabel("The value function evaluated at the intial state V(s0)")
+plt.plot(time, V_s0)
+plt.show()
+
+#%%
+start_simu = 500000
+rb.animate_solution(maze, path, start_simu)
 # %%

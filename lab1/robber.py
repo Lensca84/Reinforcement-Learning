@@ -44,7 +44,7 @@ class Bank:
 
     # Give names to actions
     actions_names = {
-        STAY: "stay",
+        #STAY: "stay",
         MOVE_LEFT: "move left",
         MOVE_RIGHT: "move right",
         MOVE_UP: "move up",
@@ -162,7 +162,7 @@ class Bank:
     def caracteristic(self,n,s,a):
         return 1/(n[s,a]**(2/3))
 
-    def policy(self):
+    def random_policy(self):
         return random.randint(0,4)
 
     def simulate_QLearning(self, gamma, duration):
@@ -179,12 +179,51 @@ class Bank:
         path.append(self.START);
         while t < duration:
             #2. Observations
-            a = self.policy()
+            a = self.random_policy()
             next_s = random.choice(self.__possible_moves(s,a))
             #3. Q-function improvement
             n[s,a] += 1
-            Q[s,a] += self.caracteristic(n,s,a)*(self.r(s,a)+gamma*(max(Q[next_s])-Q[s,a]))
-            V_s0[t] = max(Q[s])
+            Q[s,a] += self.caracteristic(n,s,a)*(self.r(s,a)+gamma*(max(Q[next_s])) - Q[s,a])
+            V_s0[t] = max(Q[s0])
+            # Add the position in the maze corresponding to the next state
+            # to the path
+            path.append(self.states[next_s])
+            # Update time and state for next iteration
+            t +=1;
+            s = next_s;
+            if t%(period) == 0:
+                print('Simulation at ', t//period, "%")
+        print('Simulation done !')
+        return path, V_s0, Q
+
+    def policy_SARSA(self, s, Q, epsilon):
+        if (random.random() < epsilon):
+            return self.random_policy()
+        else:
+            return np.argmax(Q[s])
+
+    def simulate_SARSA(self, gamma, epsilon, duration):
+        path = list();
+        # Initialize current state and time
+        t = 0;
+        s0 = self.map[self.START];
+        s = s0
+        Q = np.zeros((self.n_states,self.n_actions))
+        n = np.zeros((self.n_states,self.n_actions))
+        V_s0 = np.zeros(duration)
+        policy = np.zeros(self.n_states)
+        period = duration//100
+        # Add the starting position in the maze to the path
+        path.append(self.START);
+        while t < duration:
+            #2. Observations
+            a = self.policy_SARSA(s,Q,epsilon)
+            next_s = random.choice(self.__possible_moves(s,a))
+            next_a = self.policy_SARSA(next_s,Q,epsilon)
+            #3. Q-function improvement
+            n[s,a] += 1
+            Q[s,a] += self.caracteristic(n,s,a)*(self.r(s,a)+gamma*Q[next_s, next_a] - Q[s,a])
+            V_s0[t] = max(Q[s0])
             # Add the position in the maze corresponding to the next state
             # to the path
             path.append(self.states[next_s])
@@ -239,7 +278,7 @@ def draw_maze(maze):
         cell.set_height(1.0/rows);
         cell.set_width(1.0/cols);
 
-def animate_solution(maze, path):
+def animate_solution(maze, path, start_simu):
 
     # Map a color to each cell in the maze
     col_map = {0: WHITE, 1: YELLOW};
@@ -272,9 +311,8 @@ def animate_solution(maze, path):
         cell.set_height(1.0/rows);
         cell.set_width(1.0/cols);
 
-
     # Update the color at each frame
-    for i in range(len(path)):
+    for i in range(start_simu, len(path)):
         if i > 0:
             grid.get_celld()[(path[i-1].player_pos)].set_facecolor(col_map[maze[path[i-1].player_pos]])
             grid.get_celld()[(path[i-1].player_pos)].get_text().set_text('')
@@ -300,6 +338,7 @@ def animate_solution(maze, path):
 
         display.display(fig)
         display.clear_output(wait=True)
-        time.sleep(1)
+        time.sleep(0.1)
+        print("i: ", i)
 
 # %%
