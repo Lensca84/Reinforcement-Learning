@@ -159,29 +159,41 @@ class Bank:
         else:
             return self.STEP_REWARD;
 
-    def simulate(self, policy, duration):
+    def caracteristic(n,s,a):
+        nsa = n[s,a]
+        if nsa == 0:
+            return 0
+        else:
+            return 1/(nsa**(2/3))
+
+    def simulate_QLearning(self, policy, gamma, duration):
         path = list();
         # Initialize current state and time
         t = 0;
-        s = self.map[self.START];
+        s0 = self.map[self.START];
+        s = s0
         Q = np.zeros(self.n_states ,self.n_actions)
         n = np.zeros(self.n_states ,self.n_actions)
+        V_s0 = np.zeros(duration)
         # Add the starting position in the maze to the path
         path.append(self.START);
         while t < duration:
-            # Move to next state given the policy and the current state
-            if self.__is_caught(s):
-                next_s = self.START;
-            else:
-                next_s = random.choice(self.__possible_moves(s,policy[s]));
+            #2. Observations
+            a = policy[s]
+            next_s = random.choice(self.__possible_moves(s,a))
+            #3. Q-function improvement
+            Q[s,a] += caracteristic(n,s,a)*(r(s,a)+gamma*(max(Q[next_s])-Q[s,a]))
+            V_s0[t] = max(Q[s])
             # Add the position in the maze corresponding to the next state
             # to the path
             path.append(self.states[next_s])
             # Update time and state for next iteration
             t +=1;
             s = next_s;
+            if t%(duration//100):
+                print('t=',t)
         print('Simulation done !')
-        return path
+        return path, V_s0
 
 
     def show(self):
