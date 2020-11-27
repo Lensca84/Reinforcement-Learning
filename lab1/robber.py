@@ -160,11 +160,7 @@ class Bank:
             return self.STEP_REWARD;
 
     def caracteristic(n,s,a):
-        nsa = n[s,a]
-        if nsa == 0:
-            return 0
-        else:
-            return 1/(nsa**(2/3))
+        return 1/(n[s,a]**(2/3))
 
     def policy():
         return random.randint(5)
@@ -185,6 +181,7 @@ class Bank:
             a = self.policy()
             next_s = random.choice(self.__possible_moves(s,a))
             #3. Q-function improvement
+            n[s,a] += 1
             Q[s,a] += self.caracteristic(n,s,a)*(self.r(s,a)+gamma*(max(Q[next_s])-Q[s,a]))
             V_s0[t] = max(Q[s])
             # Add the position in the maze corresponding to the next state
