@@ -46,6 +46,6 @@ path = env.simulate(policy, duration);
 
 #%%
 # Show the shortest path
-bk.animate_solution(maze, path, 3)
+bk.animate_solution(maze, path, 5)
 
 # %%

@@ -450,6 +450,6 @@ def animate_solution(maze, path, start_view=0):
 
         display.display(fig)
         display.clear_output(wait=True)
-        time.sleep(100)
+        time.sleep(0.1)
 
 # %%
