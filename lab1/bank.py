@@ -389,7 +389,7 @@ def draw_maze(maze):
         cell.set_height(1.0/rows);
         cell.set_width(1.0/cols);
 
-def animate_solution(maze, path):
+def animate_solution(maze, path, start_view=0):
 
     # Map a color to each cell in the maze
     col_map = {0: WHITE, 1: YELLOW};
@@ -424,7 +424,7 @@ def animate_solution(maze, path):
 
 
     # Update the color at each frame
-    for i in range(len(path)):
+    for i in range(start_view,len(path)):
         if i > 0:
             grid.get_celld()[(path[i-1].player_pos)].set_facecolor(col_map[maze[path[i-1].player_pos]])
             grid.get_celld()[(path[i-1].player_pos)].get_text().set_text('')
@@ -437,7 +437,7 @@ def animate_solution(maze, path):
             grid.get_celld()[(path[i].police_pos)].set_facecolor(BLUE)
             grid.get_celld()[(path[i].police_pos)].get_text().set_text('Police')
         if i%2 != 0:
-            grid.get_celld()[(path[i].police_pos)].set_facecolor(RED)
+            grid.get_celld()[(path[i].police_pos)].set_facecolor(BLUE)
             grid.get_celld()[(path[i].police_pos)].get_text().set_text('Police')
 
         if i > 0:
@@ -446,10 +446,10 @@ def animate_solution(maze, path):
                 grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player has been caught')
             elif maze[path[i].player_pos[0], path[i].player_pos[1]] == 1:
                 grid.get_celld()[(path[i].player_pos)].set_facecolor(ORANGE)
-                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Player is robbing')
+                grid.get_celld()[(path[i].player_pos)].get_text().set_text('Robbing')
 
         display.display(fig)
         display.clear_output(wait=True)
-        time.sleep(1)
+        time.sleep(100)
 
 # %%
