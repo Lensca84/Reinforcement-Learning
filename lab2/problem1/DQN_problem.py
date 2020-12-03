@@ -33,6 +33,12 @@ def running_average(x, N):
         y = np.zeros_like(x)
     return y
 
+def epsilon_linear(k, epsilon_min, epsilon_max, Z):
+    return np.max(epsilon_min, epsilon_max - (epsilon_max-epsilon_min)*(k-1)/(Z-1))
+
+def epsilon_exp(k, epsilon_min, epsilon_max, Z):
+    return np.max(epsilon_min, epsilon_max*(epsilon_min/epsilon_max)**((k-1)/(Z-1)))
+
 # Import and initialize the discrete Lunar Laner Environment
 env = gym.make('LunarLander-v2')
 env.reset()
@@ -43,6 +49,17 @@ discount_factor = 0.95                       # Value of the discount factor
 n_ep_running_average = 50                    # Running average of 50 episodes
 n_actions = env.action_space.n               # Number of available actions
 dim_state = len(env.observation_space.high)  # State dimensionality
+L = 10000                                    # The buffer size should be between 5000 and 30000
+N = 32                                       # The training batch size should be between 4 and 128
+C = L//N                                     # The target frequency update should be L/N
+e_min = 0.05                                 # The minimal value of epsilon
+e_max = 0.99                                 # The maximal value of epsilon
+Z = N_episodes//0.9                          # Z should be between 90% and 95% of N_episodes
+
+
+# Number of images per seconds and frequence
+n_images_per_s = 40
+frequence_of_images_per_s = 1/n_images_per_s
 
 # We will use these variables to compute the average episodic reward and
 # the average number of steps per episode
@@ -59,14 +76,14 @@ agent = RandomAgent(n_actions)
 EPISODES = trange(N_episodes, desc='Episode: ', leave=True)
 
 for i in EPISODES:
-    # Reset enviroment data and initialize variables
+    # Reset environment data and initialize variables
     done = False
     state = env.reset()
     total_episode_reward = 0.
     t = 0
     while not done:
         env.render()
-        time.sleep(0.02)
+        time.sleep(frequence_of_images_per_s)
         # Take a random action
         action = agent.forward(state)
 
