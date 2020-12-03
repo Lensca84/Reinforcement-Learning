@@ -17,6 +17,7 @@
 import numpy as np
 import gym
 import torch
+import time
 import matplotlib.pyplot as plt
 from tqdm import trange
 from DQN_agent import RandomAgent
@@ -64,6 +65,8 @@ for i in EPISODES:
     total_episode_reward = 0.
     t = 0
     while not done:
+        env.render()
+        time.sleep(0.02)
         # Take a random action
         action = agent.forward(state)
 
