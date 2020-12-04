@@ -15,6 +15,12 @@
 
 # Load packages
 import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from DQN_network import DqnNetwork
+from DQN_ERB import ExperienceReplayBuffer
+import random
 
 class Agent(object):
     ''' Base agent class, used as a parent class
@@ -53,3 +59,68 @@ class RandomAgent(Agent):
         '''
         self.last_action = np.random.randint(0, self.n_actions)
         return self.last_action
+
+
+class DqnAgent(Agent):
+    ''' Agent that will play with the DQN algorithm'''
+    def __init__(self, n_actions, size_of_layers, buffer_size, discount_factor, batch_size, alpha, clipping_value):
+        super(DqnAgent, self).__init__(n_actions)
+
+        self.network = DqnNetwork(size_of_layers)
+        self.target_network = DqnNetwork(size_of_layers)
+        self.target_equal_to_main()
+        self.buffer = ExperienceReplayBuffer(buffer_size)
+        self.discount_factor = discount_factor
+        self.batch_size = batch_size
+        self.optimizer = optim.Adam(self.network.parameters(), lr=alpha)
+        self.clipping_value = clipping_value
+    
+    def target_equal_to_main(self):
+        self.target_network.load_state_dict(self.network.state_dict())
+        return
+    
+    def forward(self, state, epsilon):
+        ''' Return the best action w.r.t. epsilon policy and the network '''
+        if random.random() < epsilon:
+            self.last_action = np.random.randint(0, self.n_actions)
+            return self.last_action
+        else:
+            state_tensor = torch.tensor([state], requires_grad=False, dtype=torch.float32)
+            self.last_action = self.network(state_tensor).max(1)[1].item()
+            return self.last_action
+    
+    def forward_target(self, state):
+        ''' Return the best value of the target network '''
+        state_tensor = torch.tensor([state], requires_grad=False, dtype=torch.float32)
+        return self.target_network(state_tensor).max(1)[0].item()
+
+    def backward(self):
+        # Sample a random batch of experiences
+        states, actions, rewards, next_states, dones = self.buffer.sample_batch(self.batch_size)
+
+        # Compute the target values
+        target_values = np.zeros((self.batch_size, self.n_actions))
+        for i in range(self.batch_size):
+            if dones[i]:
+                target_values[i][actions[i]] = rewards[i]
+            else:
+                target_values[i][actions[i]] = rewards[i] + self.discount_factor*self.forward_target(next_states[i])
+        target_values_tensor = torch.tensor(target_values, requires_grad=False, dtype=torch.float32)
+        
+        # Update the network with a backward pass
+        states_tensor = torch.tensor(states, requires_grad=False, dtype=torch.float32)
+        values = self.network(states_tensor)
+
+        # Compute loss function
+        loss = nn.functional.mse_loss(values, target_values_tensor)
+
+        # Compute gradient
+        loss.backward()
+
+        # Clip gradient norm to 1
+        nn.utils.clip_grad_norm_(self.network.parameters(), max_norm=self.clipping_value)
+
+        # Perform backward pass (backpropagation)
+        self.optimizer.step()
+
+        return

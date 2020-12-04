@@ -21,4 +21,5 @@ class ExperienceReplayBuffer(object):
 
         batch = [self.buffer[i] for i in indices]
 
+        # Return a tuple of list
         return zip(*batch)
