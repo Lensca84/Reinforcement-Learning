@@ -63,13 +63,13 @@ class RandomAgent(Agent):
 
 class DqnAgent(Agent):
     ''' Agent that will play with the DQN algorithm'''
-    def __init__(self, n_actions, size_of_layers, buffer_size, discount_factor, batch_size, alpha, clipping_value):
+    def __init__(self, n_actions, size_of_layers, buffer_size, discount_factor, batch_size, alpha, clipping_value, cer_mode, cer_proportion):
         super(DqnAgent, self).__init__(n_actions)
 
         self.network = DqnNetwork(size_of_layers)
         self.target_network = DqnNetwork(size_of_layers)
         self.target_equal_to_main()
-        self.buffer = ExperienceReplayBuffer(buffer_size)
+        self.buffer = ExperienceReplayBuffer(buffer_size, cer_mode, cer_proportion)
         self.discount_factor = discount_factor
         self.batch_size = batch_size
         self.optimizer = optim.Adam(self.network.parameters(), lr=alpha)

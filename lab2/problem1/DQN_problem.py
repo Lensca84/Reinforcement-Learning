@@ -51,15 +51,17 @@ discount_factor = 0.95                       # Value of the discount factor
 n_ep_running_average = 50                    # Running average of 50 episodes
 n_actions = env.action_space.n               # Number of available actions
 dim_state = len(env.observation_space.high)  # State dimensionality
-buffer_size = 25000                          # The buffer size should be between 5000 and 30000
+buffer_size = 20000                          # The buffer size should be between 5000 and 30000
 batch_size = 32                              # The training batch size should be between 4 and 128
 target_freq_update = buffer_size//batch_size # The target frequency update should be L/N
 e_min = 0.05                                 # The minimal value of epsilon
-e_max = 0.95                                 # The maximal value of epsilon
+e_max = 0.99                                 # The maximal value of epsilon
 linear_eps = True                            # Take the value of true if the epsilon is linear and false else
-Z = N_episodes//0.9                          # Z should be between 90% and 95% of N_episodes
-alpha = 5*10**-4                             # The learning rate should be between 10**-3 and 10**-4
+Z = N_episodes*0.95                          # Z should be between 90% and 95% of N_episodes
+alpha = 5*10**-4                               # The learning rate should be between 10**-3 and 10**-4
 clipping_value = 1                           # The clipping value should be between 0.5 and 2
+cer_proportion = 1/3                         # This is the proportion of the latest experiences
+cer_mode = True                              # This enable the mode CER
 
 
 # Number of images per seconds and frequence
@@ -78,7 +80,7 @@ episode_number_of_steps = []   # this list contains the number of steps per epis
 # DQN agent initialization
 hidden_layer_size = 32 # The number of hidden layer should be between 8 and 128
 size_of_layers = [dim_state, hidden_layer_size, n_actions]
-agent = DqnAgent(n_actions, size_of_layers, buffer_size, discount_factor, batch_size, alpha, clipping_value)
+agent = DqnAgent(n_actions, size_of_layers, buffer_size, discount_factor, batch_size, alpha, clipping_value, cer_mode, cer_proportion)
 
 # Fill the buffer with random experiences
 fill_value = 5000
