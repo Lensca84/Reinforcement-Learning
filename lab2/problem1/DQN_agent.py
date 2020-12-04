@@ -98,21 +98,38 @@ class DqnAgent(Agent):
         # Sample a random batch of experiences
         states, actions, rewards, next_states, dones = self.buffer.sample_batch(self.batch_size)
 
+        # Get the values of the network
+        states_tensor = torch.tensor(states, requires_grad=False, dtype=torch.float32)
+        values = self.network(states_tensor)
         # Compute the target values
-        target_values = np.zeros((self.batch_size, self.n_actions))
+        #target_values = np.zeros((self.batch_size, self.n_actions))
+        target_values = values.clone()
+        #target_values = np.zeros((self.batch_size, 1))
         for i in range(self.batch_size):
             if dones[i]:
                 target_values[i][actions[i]] = rewards[i]
+                #target_values[i][0] = rewards[i]
             else:
                 target_values[i][actions[i]] = rewards[i] + self.discount_factor*self.forward_target(next_states[i])
-        target_values_tensor = torch.tensor(target_values, requires_grad=False, dtype=torch.float32)
+                #target_values[i][0] = rewards[i] + self.discount_factor*self.forward_target(next_states[i])
+        #target_values_tensor = torch.tensor(target_values, requires_grad=False, dtype=torch.float32)
         
         # Update the network with a backward pass
-        states_tensor = torch.tensor(states, requires_grad=False, dtype=torch.float32)
-        values = self.network(states_tensor)
+        #states_tensor = torch.tensor(states, requires_grad=False, dtype=torch.float32)
+        #values = self.network(states_tensor)
+        #values_action = np.zeros((self.batch_size, 1))
+        #for i in range(self.batch_size):
+        #    values_action[i][0] = values[i][actions[i]]
+        
+        #values_action_tensor = torch.tensor(values_action, requires_grad=False, dtype=torch.float32)
+        #print("Values: ", values)
+        #print("tensor target values :", target_values_tensor)
+        #print("values action tensor: ", values_action_tensor)
 
         # Compute loss function
-        loss = nn.functional.mse_loss(values, target_values_tensor)
+        #loss = nn.functional.mse_loss(values, target_values_tensor)
+        loss = nn.functional.mse_loss(values, target_values)
+        #loss = nn.functional.mse_loss(values_action_tensor, target_values_tensor)
 
         # Compute gradient
         loss.backward()
