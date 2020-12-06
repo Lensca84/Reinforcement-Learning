@@ -11,7 +11,7 @@ class ExperienceReplayBuffer(object):
     
     def append(self, experience):
         self.buffer.append(experience)
-    
+
     def __len__(self):
         return len(self.buffer)
     
@@ -25,7 +25,7 @@ class ExperienceReplayBuffer(object):
             indices_random = np.random.choice(len(self.buffer), size=n_random, replace=False)
             batch = [self.buffer[i] for i in indices_random]
 
-            for k in range(n_last):
+            for k in range(1, n_last+1):
                 batch.append(self.buffer[-k])
 
             # Return a tuple of list

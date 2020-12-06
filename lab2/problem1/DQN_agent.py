@@ -76,7 +76,8 @@ class DqnAgent(Agent):
         self.clipping_value = clipping_value
     
     def target_equal_to_main(self):
-        self.target_network.load_state_dict(self.network.state_dict())
+        for target_param, main_param in zip(self.target_network.parameters(), self.network.parameters()):
+            target_param.data.copy_(main_param)
         return
     
     def forward(self, state, epsilon):
@@ -91,45 +92,38 @@ class DqnAgent(Agent):
     
     def forward_target(self, state):
         ''' Return the best value of the target network '''
-        state_tensor = torch.tensor([state], requires_grad=False, dtype=torch.float32)
-        return self.target_network(state_tensor).max(1)[0].item()
+        #state_tensor = torch.tensor([state], requires_grad=False, dtype=torch.float32)
+        state_tensor = torch.tensor(state, requires_grad=False, dtype=torch.float32)
+        #return self.target_network(state_tensor).max(1)[0]
+        #print("state tensor: ", state_tensor)
+        #test = self.target_network(state_tensor).detach().max(1)[0]
+        return self.target_network(state_tensor).detach().max(1)[0].unsqueeze(1)
 
     def backward(self):
         # Sample a random batch of experiences
         states, actions, rewards, next_states, dones = self.buffer.sample_batch(self.batch_size)
 
-        # Get the values of the network
-        states_tensor = torch.tensor(states, requires_grad=False, dtype=torch.float32)
-        values = self.network(states_tensor)
-        # Compute the target values
-        #target_values = np.zeros((self.batch_size, self.n_actions))
-        target_values = values.clone()
-        #target_values = np.zeros((self.batch_size, 1))
-        for i in range(self.batch_size):
-            if dones[i]:
-                target_values[i][actions[i]] = rewards[i]
-                #target_values[i][0] = rewards[i]
-            else:
-                target_values[i][actions[i]] = rewards[i] + self.discount_factor*self.forward_target(next_states[i])
-                #target_values[i][0] = rewards[i] + self.discount_factor*self.forward_target(next_states[i])
-        #target_values_tensor = torch.tensor(target_values, requires_grad=False, dtype=torch.float32)
-        
-        # Update the network with a backward pass
+        ## Get the values of the network
         #states_tensor = torch.tensor(states, requires_grad=False, dtype=torch.float32)
         #values = self.network(states_tensor)
-        #values_action = np.zeros((self.batch_size, 1))
+        ## Compute the target values
+        #target_values = values.clone()
         #for i in range(self.batch_size):
-        #    values_action[i][0] = values[i][actions[i]]
-        
-        #values_action_tensor = torch.tensor(values_action, requires_grad=False, dtype=torch.float32)
-        #print("Values: ", values)
-        #print("tensor target values :", target_values_tensor)
-        #print("values action tensor: ", values_action_tensor)
+        #    if dones[i]:
+        #        target_values[i][actions[i]] = rewards[i]
+        #    else:
+        #        target_values[i][actions[i]] = rewards[i] + self.discount_factor*self.forward_target(next_states[i]).item()
 
+
+        rewards_tensor = torch.tensor(rewards, requires_grad=False, dtype=torch.float32).unsqueeze(1)
+        dones_tensor = torch.tensor(dones, requires_grad=False, dtype=torch.float32).unsqueeze(1)
+        target_values = rewards_tensor + (self.discount_factor * self.forward_target(next_states) * (1 - dones_tensor))
+
+        states_tensor = torch.tensor(states, requires_grad=False, dtype=torch.float32)
+        actions_tensor = torch.tensor(actions, requires_grad=False, dtype=torch.int64).unsqueeze(1)
+        values = self.network(states_tensor).gather(1, actions_tensor)
         # Compute loss function
-        #loss = nn.functional.mse_loss(values, target_values_tensor)
         loss = nn.functional.mse_loss(values, target_values)
-        #loss = nn.functional.mse_loss(values_action_tensor, target_values_tensor)
 
         # Compute gradient
         loss.backward()
