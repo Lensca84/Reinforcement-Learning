@@ -1,10 +1,14 @@
 import numpy as np
+import torch
 from collections import deque, namedtuple
 
 Experience = namedtuple('Experience', ['state', 'action', 'reward', 'next_state', 'done'])
 
 class ExperienceReplayBuffer(object):
-    def __init__(self, maximum_length, cer_mode, cer_proportion):
+    def __init__(self, maximum_length, cer_mode, cer_proportion, seed):
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+
         self.buffer = deque(maxlen=maximum_length)
         self.cer_mode = cer_mode
         self.cer_proportion = cer_proportion

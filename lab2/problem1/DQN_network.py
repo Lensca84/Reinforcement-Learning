@@ -1,11 +1,14 @@
 import torch.nn as nn
 import torch
+import numpy as np
 
 
 class DqnNetwork(nn.Module):
 
-    def __init__(self, size_of_layers):
+    def __init__(self, size_of_layers, seed):
         super().__init__()
+        torch.manual_seed(seed)
+        np.random.seed(seed)
 
         self.nb_h_layer = len(size_of_layers) - 2
         self.input_layer = nn.Linear(size_of_layers[0], size_of_layers[1])
@@ -33,8 +36,10 @@ class DqnNetwork(nn.Module):
 
 class DuelingDqnNetwork(nn.Module):
 
-    def __init__(self, size_of_layers):
+    def __init__(self, size_of_layers, seed):
         super().__init__()
+        torch.manual_seed(seed)
+        np.random.seed(seed)
 
         self.nb_h_layer = len(size_of_layers) - 3
         self.input_layer = nn.Linear(size_of_layers[0], size_of_layers[1])

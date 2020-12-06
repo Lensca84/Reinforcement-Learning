@@ -48,8 +48,10 @@ class Agent(object):
 
 class RandomAgent(Agent):
     ''' Agent taking actions uniformly at random, child of the class Agent'''
-    def __init__(self, n_actions: int):
+    def __init__(self, n_actions: int, seed):
         super(RandomAgent, self).__init__(n_actions)
+        torch.manual_seed(seed)
+        np.random.seed(seed)
 
     def forward(self, state: np.ndarray) -> int:
         ''' Compute an action uniformly at random across n_actions possible
@@ -64,17 +66,19 @@ class RandomAgent(Agent):
 
 class DqnAgent(Agent):
     ''' Agent that will play with the DQN algorithm'''
-    def __init__(self, n_actions, size_of_layers, buffer_size, discount_factor, batch_size, alpha, clipping_value, cer_mode, cer_proportion, dueling_mode, double_mode):
+    def __init__(self, n_actions, size_of_layers, buffer_size, discount_factor, batch_size, alpha, clipping_value, cer_mode, cer_proportion, dueling_mode, double_mode, seed):
         super(DqnAgent, self).__init__(n_actions)
+        torch.manual_seed(seed)
+        np.random.seed(seed)
 
         if dueling_mode:
-            self.network = DuelingDqnNetwork(size_of_layers)
-            self.target_network = DuelingDqnNetwork(size_of_layers)
+            self.network = DuelingDqnNetwork(size_of_layers, seed)
+            self.target_network = DuelingDqnNetwork(size_of_layers, seed)
         else:
-            self.network = DqnNetwork(size_of_layers)
-            self.target_network = DqnNetwork(size_of_layers)
+            self.network = DqnNetwork(size_of_layers, seed)
+            self.target_network = DqnNetwork(size_of_layers, seed)
         self.target_equal_to_main()
-        self.buffer = ExperienceReplayBuffer(buffer_size, cer_mode, cer_proportion)
+        self.buffer = ExperienceReplayBuffer(buffer_size, cer_mode, cer_proportion, seed)
         self.discount_factor = discount_factor
         self.batch_size = batch_size
         self.optimizer = optim.Adam(self.network.parameters(), lr=alpha)

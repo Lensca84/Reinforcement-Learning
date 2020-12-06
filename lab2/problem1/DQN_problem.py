@@ -23,6 +23,8 @@ from tqdm import trange
 from DQN_agent import RandomAgent
 from DQN_agent import DqnAgent
 from DQN_ERB import Experience
+from DQN_network import DqnNetwork
+from DQN_network import DuelingDqnNetwork
 
 def running_average(x, N):
     ''' Function used to compute the running average
@@ -40,6 +42,10 @@ def epsilon_linear(k, epsilon_min, epsilon_max, Z):
 
 def epsilon_exp(k, epsilon_min, epsilon_max, Z):
     return max(epsilon_min, epsilon_max*(epsilon_min/epsilon_max)**((k-1)/(Z-1)))
+
+def copy_network(copy, to_copy):
+    for copy_param, to_copy_param in zip(copy.parameters(), to_copy.parameters()):
+        copy_param.data.copy_(to_copy_param)
 
 # Import and initialize the discrete Lunar Laner Environment
 env = gym.make('LunarLander-v2')
@@ -65,12 +71,51 @@ cer_proportion = 1/8                         # This is the proportion of the lat
 cer_mode = True                              # This enable the mode CER
 dueling_mode = True                          # This enable the dueling architecture
 double_mode = True                           # This enable the double DQN
+seed = 42                                    # The seed for reproducibility
+see_result = True                            # This enable the visualization of the last network
+
+# Set the seed on the different libraries
+torch.manual_seed(seed)
+np.random.seed(seed)
 
 
 # Number of images per seconds and frequence
 n_images_per_s = 50
 frequence_of_images_per_s = 1/n_images_per_s
 period_render = N_episodes // 10
+
+if see_result:
+    # Run some experiences of the last network
+    nb_of_experience = 50
+    load_agent = torch.load('neural-network-1.pt')
+
+    for k in range(nb_of_experience):
+        done = False
+        state = env.reset()
+        total_episode_reward = 0.
+        t = 0
+        print("Episode: ", k)
+        while not done:
+            env.render()
+            time.sleep(frequence_of_images_per_s)
+
+            # Take epsilon-greedy action
+            state_tensor = torch.tensor([state], requires_grad=False, dtype=torch.float32)
+            action = load_agent.forward(state_tensor).max(1)[1].item()
+
+            # Get next state and reward.  The done variable
+            # will be True if you reached the goal position,
+            # False otherwise
+            next_state, reward, done, _ = env.step(action)
+
+            # Update episode reward
+            total_episode_reward += reward
+
+            # Update state for next iteration
+            state = next_state
+            t+= 1
+        print("Total episode reward: ", total_episode_reward)
+        print("Number of steps: ", t)
 
 # We will use these variables to compute the average episodic reward and
 # the average number of steps per episode
@@ -85,11 +130,11 @@ hidden_layer_size = 64 # The number of hidden layer should be between 8 and 128
 hidden_V_and_A_layer_size = hidden_layer_size//2
 size_of_layers = [dim_state, hidden_layer_size, hidden_V_and_A_layer_size, n_actions]
 #size_of_layers = [dim_state, hidden_layer_size, n_actions]
-agent = DqnAgent(n_actions, size_of_layers, buffer_size, discount_factor, batch_size, alpha, clipping_value, cer_mode, cer_proportion, dueling_mode, double_mode)
+agent = DqnAgent(n_actions, size_of_layers, buffer_size, discount_factor, batch_size, alpha, clipping_value, cer_mode, cer_proportion, dueling_mode, double_mode, seed)
 
 # Fill the buffer with random experiences
 fill_value = 10000
-r_agent = RandomAgent(n_actions)
+r_agent = RandomAgent(n_actions, seed)
 percent_fill_value = fill_value // 100
 
 while len(agent.buffer) < fill_value:
@@ -126,6 +171,14 @@ while len(agent.buffer) < fill_value:
 EPISODES = trange(N_episodes, desc='Episode: ', leave=True)
 counter_steps = 0
 epsilon_i = e_max
+max_avg_reward = -1000
+if dueling_mode:
+    avg_network = DuelingDqnNetwork(size_of_layers, seed)
+else:
+    avg_network = DqnNetwork(size_of_layers, seed)
+
+copy_network(avg_network, agent.network)
+
 
 for i in EPISODES:
     # Reset environment data and initialize variables
@@ -175,6 +228,10 @@ for i in EPISODES:
     # Append episode reward and total number of steps
     episode_reward_list.append(total_episode_reward)
     episode_number_of_steps.append(t)
+    avg_reward = running_average(episode_reward_list, n_ep_running_average)[-1]
+    if max_avg_reward < avg_reward:
+        max_avg_reward = avg_reward
+        copy_network(avg_network, agent.network)
 
     # Close environment
     env.close()
@@ -209,3 +266,7 @@ ax[1].set_title('Total number of steps vs Episodes')
 ax[1].legend()
 ax[1].grid(alpha=0.3)
 plt.show()
+
+# Save the network
+
+torch.save(agent.network, 'neural-network-2.pt')
