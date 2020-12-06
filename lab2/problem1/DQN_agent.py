@@ -19,6 +19,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from DQN_network import DqnNetwork
+from DQN_network import DuelingDqnNetwork
 from DQN_ERB import ExperienceReplayBuffer
 import random
 
@@ -63,17 +64,22 @@ class RandomAgent(Agent):
 
 class DqnAgent(Agent):
     ''' Agent that will play with the DQN algorithm'''
-    def __init__(self, n_actions, size_of_layers, buffer_size, discount_factor, batch_size, alpha, clipping_value, cer_mode, cer_proportion):
+    def __init__(self, n_actions, size_of_layers, buffer_size, discount_factor, batch_size, alpha, clipping_value, cer_mode, cer_proportion, dueling_mode, double_mode):
         super(DqnAgent, self).__init__(n_actions)
 
-        self.network = DqnNetwork(size_of_layers)
-        self.target_network = DqnNetwork(size_of_layers)
+        if dueling_mode:
+            self.network = DuelingDqnNetwork(size_of_layers)
+            self.target_network = DuelingDqnNetwork(size_of_layers)
+        else:
+            self.network = DqnNetwork(size_of_layers)
+            self.target_network = DqnNetwork(size_of_layers)
         self.target_equal_to_main()
         self.buffer = ExperienceReplayBuffer(buffer_size, cer_mode, cer_proportion)
         self.discount_factor = discount_factor
         self.batch_size = batch_size
         self.optimizer = optim.Adam(self.network.parameters(), lr=alpha)
         self.clipping_value = clipping_value
+        self.double_mode = double_mode
     
     def target_equal_to_main(self):
         for target_param, main_param in zip(self.target_network.parameters(), self.network.parameters()):
@@ -90,42 +96,36 @@ class DqnAgent(Agent):
             self.last_action = self.network(state_tensor).max(1)[1].item()
             return self.last_action
     
-    def forward_target(self, state):
-        ''' Return the best value of the target network '''
-        #state_tensor = torch.tensor([state], requires_grad=False, dtype=torch.float32)
-        state_tensor = torch.tensor(state, requires_grad=False, dtype=torch.float32)
-        #return self.target_network(state_tensor).max(1)[0]
-        #print("state tensor: ", state_tensor)
-        #test = self.target_network(state_tensor).detach().max(1)[0]
-        return self.target_network(state_tensor).detach().max(1)[0].unsqueeze(1)
-
     def backward(self):
         # Sample a random batch of experiences
         states, actions, rewards, next_states, dones = self.buffer.sample_batch(self.batch_size)
 
-        ## Get the values of the network
-        #states_tensor = torch.tensor(states, requires_grad=False, dtype=torch.float32)
-        #values = self.network(states_tensor)
-        ## Compute the target values
-        #target_values = values.clone()
-        #for i in range(self.batch_size):
-        #    if dones[i]:
-        #        target_values[i][actions[i]] = rewards[i]
-        #    else:
-        #        target_values[i][actions[i]] = rewards[i] + self.discount_factor*self.forward_target(next_states[i]).item()
-
-
-        rewards_tensor = torch.tensor(rewards, requires_grad=False, dtype=torch.float32).unsqueeze(1)
-        dones_tensor = torch.tensor(dones, requires_grad=False, dtype=torch.float32).unsqueeze(1)
-        target_values = rewards_tensor + (self.discount_factor * self.forward_target(next_states) * (1 - dones_tensor))
-
         states_tensor = torch.tensor(states, requires_grad=False, dtype=torch.float32)
         actions_tensor = torch.tensor(actions, requires_grad=False, dtype=torch.int64).unsqueeze(1)
+        rewards_tensor = torch.tensor(rewards, requires_grad=False, dtype=torch.float32).unsqueeze(1)
+        next_states_tensor = torch.tensor(next_states, requires_grad=False, dtype=torch.float32)
+        dones_tensor = torch.tensor(dones, requires_grad=False, dtype=torch.float32).unsqueeze(1)
+
+        if self.double_mode:
+            # Get the best actions for the network on the next states
+            actions_main_network = self.network(next_states_tensor).detach().max(1)[1].unsqueeze(1)
+            # Get the best values for the target network with the actions of the main network
+            target_network_values = self.target_network(next_states_tensor).detach().gather(1, actions_main_network)
+            # Compute the target values
+            target_values = rewards_tensor + (self.discount_factor * target_network_values * (1-dones_tensor))
+        else:
+            # Get the target value for the network
+            target_values = rewards_tensor + (self.discount_factor * self.forward_target(next_states_tensor).detach().max(1)[0].unsqueeze(1) * (1 - dones_tensor))
+
+
+
+        # Get the values of the network
         values = self.network(states_tensor).gather(1, actions_tensor)
+
         # Compute loss function
         loss = nn.functional.mse_loss(values, target_values)
 
-        # Compute gradient
+        # Compute gradient after putting it to zero
         loss.backward()
 
         # Clip gradient norm to 1
