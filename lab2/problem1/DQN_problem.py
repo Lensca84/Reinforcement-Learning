@@ -78,7 +78,6 @@ see_result = True                            # This enable the visualization of 
 torch.manual_seed(seed)
 np.random.seed(seed)
 
-
 # Number of images per seconds and frequence
 n_images_per_s = 50
 frequence_of_images_per_s = 1/n_images_per_s
@@ -87,7 +86,7 @@ period_render = N_episodes // 10
 if see_result:
     # Run some experiences of the last network
     nb_of_experience = 50
-    load_agent = torch.load('neural-network-1.pt')
+    load_agent = torch.load('neural-network-1.pth')
 
     for k in range(nb_of_experience):
         done = False
@@ -228,6 +227,8 @@ for i in EPISODES:
     # Append episode reward and total number of steps
     episode_reward_list.append(total_episode_reward)
     episode_number_of_steps.append(t)
+    
+    # Save the best average network
     avg_reward = running_average(episode_reward_list, n_ep_running_average)[-1]
     if max_avg_reward < avg_reward:
         max_avg_reward = avg_reward
@@ -268,5 +269,4 @@ ax[1].grid(alpha=0.3)
 plt.show()
 
 # Save the network
-
-torch.save(agent.network, 'neural-network-2.pt')
+torch.save(agent.network, 'neural-network-2.pth')

@@ -129,10 +129,10 @@ class DqnAgent(Agent):
         # Compute loss function
         loss = nn.functional.mse_loss(values, target_values)
 
-        # Compute gradient after putting it to zero
+        # Compute gradient
         loss.backward()
 
-        # Clip gradient norm to 1
+        # Clip gradient norm to clipping value
         nn.utils.clip_grad_norm_(self.network.parameters(), max_norm=self.clipping_value)
 
         # Perform backward pass (backpropagation)
