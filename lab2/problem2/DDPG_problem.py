@@ -20,7 +20,9 @@ import torch
 import matplotlib.pyplot as plt
 from tqdm import trange
 from DDPG_agent import RandomAgent
-from DDPG_agent import Ddpg_agent
+from DDPG_agent import DdpgAgent
+from DDPG_network import DdpgActorNetwork
+from DDPG_network import DdpgCriticNetwork
 from DDPG_ERB import Experience
 from DDPG_soft_updates import soft_updates
 import time
@@ -72,11 +74,11 @@ episode_reward_list = []  # Used to save episodes reward
 episode_number_of_steps = []
 
 # DDPG Agent initialization
-agent = Ddpg_agent(m, dim_state, buffer_size, discount_factor, batch_size, alpha_actor, alpha_critic, clipping_value, tau, mu, sigma, d, seed)
+agent = DdpgAgent(m, dim_state, buffer_size, discount_factor, batch_size, alpha_actor, alpha_critic, clipping_value, tau, mu, sigma, d, seed)
 
 # Fill the buffer with random experiences
 fill_value = 10000
-r_agent = RandomAgent(n_actions, seed)
+r_agent = RandomAgent(m, seed)
 percent_fill_value = fill_value // 100
 
 while len(agent.buffer) < fill_value:
@@ -109,8 +111,8 @@ while len(agent.buffer) < fill_value:
 # Training process
 EPISODES = trange(N_episodes, desc='Episode: ', leave=True)
 max_avg_reward = -1000
-avg_actor_network = DdpgActorNetwork(n_actions, dim_state, seed)
-avg_critic_network = DdpgCriticNetwork(n_actions, dim_state, seed)
+avg_actor_network = DdpgActorNetwork(m, dim_state, seed)
+avg_critic_network = DdpgCriticNetwork(m, dim_state, seed)
 
 soft_updates(agent.critic_network, avg_critic_network, 1)
 soft_updates(agent.actor_network, avg_actor_network, 1)
@@ -127,7 +129,7 @@ for i in EPISODES:
             time.sleep(frequence_of_images_per_s)
 
         # Take a random action
-        action = agent.forward(state).numpy()
+        action = agent.forward(state)
 
         # Get next state and reward.  The done variable
         # will be True if you reached the goal position,

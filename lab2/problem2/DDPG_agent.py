@@ -16,6 +16,8 @@
 # Load packages
 import numpy as np
 import torch
+import torch.nn as nn
+import torch.optim as optim
 from DDPG_network import DdpgActorNetwork
 from DDPG_network import DdpgCriticNetwork
 from DDPG_ERB import ExperienceReplayBuffer
@@ -75,12 +77,12 @@ class DdpgAgent(Agent):
         self.target_actor_network = DdpgActorNetwork(n_actions, dim_state, seed)
         self.critic_network = DdpgCriticNetwork(n_actions, dim_state, seed)
         self.target_critic_network = DdpgCriticNetwork(n_actions, dim_state, seed)
-        soft_updates(actor_network, target_actor_network, 1)
-        soft_updates(critic_network, target_critic_network, 1)
+        soft_updates(self.actor_network, self.target_actor_network, 1)
+        soft_updates(self.critic_network, self.target_critic_network, 1)
         
         self.optimizer_actor = optim.Adam(self.actor_network.parameters(), lr=alpha_actor)
         self.optimizer_critic = optim.Adam(self.critic_network.parameters(), lr=alpha_critic)
-        self.clipping_value = clippping_value
+        self.clipping_value = clipping_value
         self.n_t = 0
         self.mu = mu
         self.sigma = sigma
@@ -90,9 +92,10 @@ class DdpgAgent(Agent):
     
     def forward(self, state):
         state_tensor = torch.tensor([state], requires_grad=False, dtype=torch.float32)
-        wt = numpy.random.normal(0, self.sigma, self.n_actions)
+        action = self.actor_network(state_tensor).detach().numpy()[0] + self.n_t
+        wt = np.random.normal(0, self.sigma, self.n_actions)
         self.n_t = -self.mu*self.n_t + wt
-        return self.actor_network(state_tensor).numpy() + nt
+        return action
 
     def backward(self, t):
         # Sample a random batch of experiences
@@ -137,7 +140,7 @@ class DdpgAgent(Agent):
             critic_values = self.critic_network(states_tensor, actor_values)
 
             # Compute the critic loss function
-            loss_actor = -torch.mean(critic_values, dim=1, keepdim=True)
+            loss_actor = -torch.mean(critic_values, dim=0, keepdim=True)
 
             # Compute gradient
             loss_actor.backward()

@@ -5,6 +5,7 @@ import numpy as np
 class DdpgActorNetwork(nn.Module):
 
     def __init__(self, n_actions, dim_state, seed):
+        super().__init__()
         torch.manual_seed(seed)
         np.random.seed(seed)
 
@@ -36,6 +37,7 @@ class DdpgActorNetwork(nn.Module):
 class DdpgCriticNetwork(nn.Module):
 
     def __init__(self, n_actions, dim_state, seed):
+        super().__init__()
         torch.manual_seed(seed)
         np.random.seed(seed)
 
