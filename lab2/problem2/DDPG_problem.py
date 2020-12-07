@@ -51,11 +51,11 @@ m = len(env.action_space.high)               # dimensionality of the action
 dim_state = len(env.observation_space.high)  # State dimensionality
 buffer_size = 30000                          # The buffer size should be between 5000 and 30000
 batch_size = 64                              # The training batch size should be between 4 and 128
+tau = 1*10**-3                               # The coefficient of the update for the target
 d = 2                                        # Target frequence update and actor frequence update
 alpha_critic = 5*10**-4                      # The learning rate should be between 10**-3 and 10**-4
 alpha_actor = 5*10**-5                       # The learning rate should be between 10**-3 and 10**-4
 clipping_value = 1                           # The clipping value should be between 0.5 and 2
-tau = batch_size/buffer_size                 # The coefficient of the update for the target
 mu = 0.15                                    # The coefficient of the noise
 sigma = 0.2                                  # The variance of the noise
 seed = 42                                    # Take a seed to do reproducibility
@@ -77,7 +77,7 @@ episode_number_of_steps = []
 agent = DdpgAgent(m, dim_state, buffer_size, discount_factor, batch_size, alpha_actor, alpha_critic, clipping_value, tau, mu, sigma, d, seed)
 
 # Fill the buffer with random experiences
-fill_value = 10000
+fill_value = 20000
 r_agent = RandomAgent(m, seed)
 percent_fill_value = fill_value // 100
 
@@ -123,7 +123,9 @@ for i in EPISODES:
     state = env.reset()
     total_episode_reward = 0.
     t = 0
+    print("To force all episode to be print")
     while not done:
+
         if i % period_render == 0:
             env.render()
             time.sleep(frequence_of_images_per_s)

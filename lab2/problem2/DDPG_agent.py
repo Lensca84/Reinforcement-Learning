@@ -119,8 +119,9 @@ class DdpgAgent(Agent):
         # Get the values of the network
         critic_values = self.critic_network(states_tensor, actions_tensor)
 
+        self.optimizer_critic.zero_grad()
         # Compute the critic loss function
-        loss_critic = nn.functional.mse_loss(critic_values, target_critic_values)
+        loss_critic = nn.functional.mse_loss(target_critic_values, critic_values)
 
         # Compute gradient
         loss_critic.backward()
@@ -139,6 +140,7 @@ class DdpgAgent(Agent):
             # Get the best values for the network with the actions of the actor network
             critic_values = self.critic_network(states_tensor, actor_values)
 
+            self.optimizer_actor.zero_grad()
             # Compute the critic loss function
             loss_actor = -torch.mean(critic_values, dim=0, keepdim=True)
 

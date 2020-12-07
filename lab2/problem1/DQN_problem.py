@@ -269,4 +269,4 @@ ax[1].grid(alpha=0.3)
 plt.show()
 
 # Save the network
-torch.save(agent.network, 'neural-network-2.pth')
+torch.save(agent.network, 'neural-network-1.pth')
