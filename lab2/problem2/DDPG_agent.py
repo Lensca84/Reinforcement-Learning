@@ -158,6 +158,3 @@ class DdpgAgent(Agent):
             soft_updates(self.actor_network, self.target_actor_network, self.tau)
 
         return
-
-
-

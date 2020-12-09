@@ -67,7 +67,7 @@ np.random.seed(seed)
 # Number of images per seconds and frequence
 n_images_per_s = 50
 frequence_of_images_per_s = 1/n_images_per_s
-period_render = N_episodes // 10
+period_render = N_episodes // 20
 
 # Reward
 episode_reward_list = []  # Used to save episodes reward
@@ -200,5 +200,5 @@ ax[1].grid(alpha=0.3)
 plt.show()
 
 # Save the networks
-torch.save(agent.actor_network, 'neural-network-2-actor.pth')
-torch.save(agent.critic_network, 'neural-network-2-critic.pth')
+torch.save(avg_actor_network, 'neural-network-2-actor.pth')
+torch.save(avg_critic_network, 'neural-network-2-critic.pth')
