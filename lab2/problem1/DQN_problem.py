@@ -72,7 +72,7 @@ cer_mode = True                              # This enable the mode CER
 dueling_mode = True                          # This enable the dueling architecture
 double_mode = True                           # This enable the double DQN
 seed = 42                                    # The seed for reproducibility
-see_result = True                            # This enable the visualization of the last network
+see_result = False                           # This enable the visualization of the last network
 
 # Set the seed on the different libraries
 torch.manual_seed(seed)
@@ -191,9 +191,9 @@ for i in EPISODES:
     print("Epsilon: ", epsilon_i)
     t = 0
     while not done:
-        if i % period_render == 0:
-            env.render()
-            time.sleep(frequence_of_images_per_s)
+        #if i % period_render == 0:
+        #    env.render()
+        #    time.sleep(frequence_of_images_per_s)
 
         # Take epsilon-greedy action
         action = agent.forward(state, epsilon_i)
@@ -269,4 +269,4 @@ ax[1].grid(alpha=0.3)
 plt.show()
 
 # Save the network
-torch.save(agent.network, 'neural-network-1.pth')
+#torch.save(agent.network, 'neural-network-1.pth')
